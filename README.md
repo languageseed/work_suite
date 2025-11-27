@@ -1,5 +1,7 @@
 # 🧰 Work Suite
 
+### 🌐 [Launch Work Suite](https://languageseed.github.io/work_suite/)
+
 **A collection of lightweight, AI-friendly productivity tools for developers and users who want simple, text-based workflows.**
 
 Work Suite apps produce traditional artefacts (task boards, timelines, presentations, spreadsheets, documents) using formats that are easy for both humans and LLMs to read, write, and transform — primarily Markdown, JSON, and plain text.

@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointer - Markdown Slide Presenter</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <style>
+        :root {
+            /* App Chrome */
+            --chrome-bg: #1a1a2e;
+            --chrome-surface: #16213e;
+            --chrome-border: #0f3460;
+            --chrome-text: #e8e8e8;
+            --chrome-text-muted: #8892b0;
+            --chrome-accent: #e94560;
+            --chrome-accent-hover: #ff6b6b;
+            
+            /* Default slide theme variables */
+            --slide-bg: #0f0f23;
+            --slide-text: #ffffff;
+            --slide-heading: #ffffff;
+            --slide-accent: #e94560;
+            --slide-muted: #8892b0;
+            --slide-code-bg: rgba(255,255,255,0.1);
+            --slide-font-body: 'Outfit', sans-serif;
+            --slide-font-heading: 'Space Grotesk', sans-serif;
+            --slide-font-mono: 'JetBrains Mono', monospace;
+        }
+
+        /* ==================== THEMES ==================== */
+        [data-theme="midnight"] {
+            --slide-bg: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1a 100%);
+            --slide-text: #e8e8e8;
+            --slide-heading: #ffffff;
+            --slide-accent: #e94560;
+            --slide-muted: #8892b0;
+            --slide-code-bg: rgba(255,255,255,0.08);
+        }
+
+        [data-theme="aurora"] {
+            --slide-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 70%, #1a1a2e 100%);
+            --slide-text: #e0e0e0;
+            --slide-heading: #64ffda;
+            --slide-accent: #64ffda;
+            --slide-muted: #8892b0;
+            --slide-code-bg: rgba(100,255,218,0.1);
+        }
+
+        [data-theme="sunset"] {
+            --slide-bg: linear-gradient(135deg, #2d1b3d 0%, #4a1942 40%, #6b2d5b 70%, #2d1b3d 100%);
+            --slide-text: #ffecd2;
+            --slide-heading: #ffb347;
+            --slide-accent: #ff6b6b;
+            --slide-muted: #c9a0dc;
+            --slide-code-bg: rgba(255,107,107,0.15);
+        }
+
+        [data-theme="ocean"] {
+            --slide-bg: linear-gradient(135deg, #0c2340 0%, #134074 40%, #13678a 70%, #0c2340 100%);
+            --slide-text: #e0f7fa;
+            --slide-heading: #4dd0e1;
+            --slide-accent: #00bcd4;
+            --slide-muted: #80deea;
+            --slide-code-bg: rgba(77,208,225,0.12);
+        }
+
+        [data-theme="forest"] {
+            --slide-bg: linear-gradient(135deg, #1a2f1a 0%, #2d4a2d 40%, #1e3a1e 70%, #1a2f1a 100%);
+            --slide-text: #e8f5e9;
+            --slide-heading: #81c784;
+            --slide-accent: #4caf50;
+            --slide-muted: #a5d6a7;
+            --slide-code-bg: rgba(76,175,80,0.12);
+        }
+
+        [data-theme="minimal"] {
+            --slide-bg: #fafafa;
+            --slide-text: #333333;
+            --slide-heading: #111111;
+            --slide-accent: #e94560;
+            --slide-muted: #666666;
+            --slide-code-bg: #f0f0f0;
+        }
+
+        [data-theme="paper"] {
+            --slide-bg: linear-gradient(135deg, #f5f5dc 0%, #faf8ef 50%, #f5f5dc 100%);
+            --slide-text: #3d3d3d;
+            --slide-heading: #1a1a1a;
+            --slide-accent: #8b4513;
+            --slide-muted: #666666;
+            --slide-code-bg: rgba(139,69,19,0.08);
+            --slide-font-body: 'Crimson Pro', serif;
+        }
+
+        [data-theme="neon"] {
+            --slide-bg: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%);
+            --slide-text: #ffffff;
+            --slide-heading: #ff00ff;
+            --slide-accent: #00ffff;
+            --slide-muted: #ff69b4;
+            --slide-code-bg: rgba(255,0,255,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--chrome-bg);
+            color: var(--chrome-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ==================== APP LAYOUT ==================== */
+        .app {
+            display: grid;
+            grid-template-columns: 200px 1fr 320px;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            grid-column: 1 / -1;
+            background: var(--chrome-surface);
+            border-bottom: 1px solid var(--chrome-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--chrome-accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--chrome-border);
+            color: var(--chrome-text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            border-color: var(--chrome-accent);
+            color: var(--chrome-accent);
+        }
+
+        .btn-primary {
+            background: var(--chrome-accent);
+            border-color: var(--chrome-accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--chrome-accent-hover);
+            border-color: var(--chrome-accent-hover);
+            color: white;
+        }
+
+        .deck-title {
+            background: transparent;
+            border: none;
+            color: var(--chrome-text);
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 300px;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .deck-title:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .deck-title:focus {
+            outline: none;
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ==================== SLIDES SIDEBAR ==================== */
+        .slides-sidebar {
+            background: var(--chrome-surface);
+            border-right: 1px solid var(--chrome-border);
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .slides-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slide-thumb {
+            aspect-ratio: 16/9;
+            background: var(--chrome-bg);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .slide-thumb:hover {
+            border-color: var(--chrome-border);
+        }
+
+        .slide-thumb.active {
+            border-color: var(--chrome-accent);
+        }
+
+        .slide-thumb-preview {
+            width: 100%;
+            height: 100%;
+            transform: scale(0.2);
+            transform-origin: top left;
+            pointer-events: none;
+        }
+
+        .slide-thumb-number {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .slide-thumb-delete {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(233,69,96,0.9);
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .slide-thumb:hover .slide-thumb-delete {
+            opacity: 1;
+        }
+
+        .add-slide-btn {
+            aspect-ratio: 16/9;
+            background: transparent;
+            border: 2px dashed var(--chrome-border);
+            border-radius: 8px;
+            color: var(--chrome-text-muted);
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .add-slide-btn:hover {
+            border-color: var(--chrome-accent);
+            color: var(--chrome-accent);
+        }
+
+        /* ==================== MAIN AREA ==================== */
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            background: var(--chrome-bg);
+            padding: 20px;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .slide-preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .slide-preview {
+            width: 100%;
+            max-width: 960px;
+            aspect-ratio: 16/9;
+            background: var(--slide-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .slide-content {
+            width: 100%;
+            height: 100%;
+            padding: 48px 64px;
+            display: flex;
+            flex-direction: column;
+            font-family: var(--slide-font-body);
+            color: var(--slide-text);
+            overflow: hidden;
+        }
+
+        /* ==================== SLIDE LAYOUTS ==================== */
+        .slide-content[data-layout="title"] {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slide-content[data-layout="title"] h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--slide-heading);
+            font-family: var(--slide-font-heading);
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .slide-content[data-layout="title"] p {
+            font-size: 1.5rem;
+            color: var(--slide-muted);
+        }
+
+        .slide-content[data-layout="content"] h1,
+        .slide-content[data-layout="content"] h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--slide-heading);
+            font-family: var(--slide-font-heading);
+            margin-bottom: 32px;
+            letter-spacing: -0.5px;
+        }
+
+        .slide-content[data-layout="content"] ul,
+        .slide-content[data-layout="content"] ol {
+            font-size: 1.5rem;
+            line-height: 2;
+            padding-left: 1.5em;
+        }
+
+        .slide-content[data-layout="content"] li {
+            margin-bottom: 8px;
+        }
+
+        .slide-content[data-layout="content"] p {
+            font-size: 1.4rem;
+            line-height: 1.7;
+        }
+
+        .slide-content[data-layout="two-column"] {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 32px;
+        }
+
+        .slide-content[data-layout="two-column"] h1,
+        .slide-content[data-layout="two-column"] h2 {
+            grid-column: 1 / -1;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--slide-heading);
+            font-family: var(--slide-font-heading);
+        }
+
+        .slide-content[data-layout="two-column"] .column {
+            font-size: 1.2rem;
+            line-height: 1.7;
+        }
+
+        .slide-content[data-layout="image-left"],
+        .slide-content[data-layout="image-right"] {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .slide-content[data-layout="image-right"] {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .slide-content[data-layout="quote"] {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 64px 100px;
+        }
+
+        .slide-content[data-layout="quote"] blockquote {
+            font-size: 2.2rem;
+            font-style: italic;
+            color: var(--slide-heading);
+            line-height: 1.5;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .slide-content[data-layout="quote"] blockquote::before {
+            content: '"';
+            font-size: 5rem;
+            color: var(--slide-accent);
+            display: block;
+            margin-bottom: -20px;
+            font-family: Georgia, serif;
+        }
+
+        .slide-content[data-layout="quote"] p:last-child {
+            margin-top: 24px;
+            font-size: 1.2rem;
+            color: var(--slide-muted);
+            font-style: normal;
+        }
+
+        .slide-content[data-layout="code"] {
+            padding: 32px 48px;
+        }
+
+        .slide-content[data-layout="code"] h1,
+        .slide-content[data-layout="code"] h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--slide-heading);
+            font-family: var(--slide-font-heading);
+            margin-bottom: 24px;
+        }
+
+        .slide-content[data-layout="code"] pre {
+            background: var(--slide-code-bg);
+            border-radius: 12px;
+            padding: 24px;
+            font-size: 1rem;
+            line-height: 1.6;
+            overflow: auto;
+            flex: 1;
+        }
+
+        .slide-content[data-layout="code"] code {
+            font-family: var(--slide-font-mono);
+        }
+
+        .slide-content[data-layout="section"] {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slide-content[data-layout="section"] h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--slide-accent);
+            font-family: var(--slide-font-heading);
+            letter-spacing: -2px;
+        }
+
+        .slide-content[data-layout="blank"] {
+            padding: 40px 56px;
+        }
+
+        .slide-content[data-layout="blank"] h1,
+        .slide-content[data-layout="blank"] h2 {
+            font-size: 2rem;
+            color: var(--slide-heading);
+            font-family: var(--slide-font-heading);
+            margin-bottom: 24px;
+        }
+
+        .slide-content[data-layout="blank"] p {
+            font-size: 1.3rem;
+            line-height: 1.7;
+        }
+
+        .slide-content[data-layout="blank"] ul,
+        .slide-content[data-layout="blank"] ol {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            padding-left: 1.5em;
+        }
+
+        /* ==================== SLIDE NUMBER ==================== */
+        .slide-number {
+            position: absolute;
+            bottom: 16px;
+            right: 24px;
+            font-size: 14px;
+            color: var(--slide-muted);
+            font-family: var(--slide-font-mono);
+        }
+
+        /* ==================== EDITOR SECTION ==================== */
+        .editor-section {
+            background: var(--chrome-surface);
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+            min-height: 120px;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Horizontal splitter between preview and editor */
+        .h-splitter {
+            height: 8px;
+            background: var(--chrome-bg);
+            cursor: row-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .h-splitter:hover {
+            background: var(--chrome-accent);
+        }
+
+        .h-splitter::after {
+            content: '';
+            width: 48px;
+            height: 3px;
+            background: var(--chrome-border);
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+
+        .h-splitter:hover::after {
+            background: white;
+        }
+
+        .editor-header {
+            background: var(--chrome-bg);
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--chrome-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--chrome-border);
+        }
+
+        .editor-textarea {
+            flex: 1;
+            background: var(--chrome-surface);
+            border: none;
+            color: var(--chrome-text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 16px;
+            resize: none;
+            outline: none;
+        }
+
+        .editor-textarea::placeholder {
+            color: var(--chrome-text-muted);
+        }
+
+        /* ==================== SETTINGS SIDEBAR ==================== */
+        .settings-sidebar {
+            background: var(--chrome-surface);
+            border-left: 1px solid var(--chrome-border);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .settings-section {
+            margin-bottom: 28px;
+        }
+
+        .settings-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--chrome-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--chrome-border);
+        }
+
+        /* ==================== LAYOUT GRID ==================== */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .layout-option {
+            aspect-ratio: 16/10;
+            background: var(--chrome-bg);
+            border: 2px solid var(--chrome-border);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .layout-option:hover {
+            border-color: var(--chrome-accent);
+        }
+
+        .layout-option.active {
+            border-color: var(--chrome-accent);
+            background: rgba(233,69,96,0.1);
+        }
+
+        .layout-option-preview {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .layout-bar {
+            background: var(--chrome-text-muted);
+            border-radius: 2px;
+            opacity: 0.4;
+        }
+
+        .layout-bar.title { height: 8px; width: 60%; align-self: center; }
+        .layout-bar.subtitle { height: 4px; width: 40%; align-self: center; }
+        .layout-bar.heading { height: 6px; width: 50%; }
+        .layout-bar.text { height: 3px; width: 90%; }
+        .layout-bar.short { width: 70%; }
+
+        .layout-option-name {
+            font-size: 9px;
+            color: var(--chrome-text-muted);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==================== THEME GRID ==================== */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .theme-option {
+            aspect-ratio: 16/10;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.02);
+        }
+
+        .theme-option.active {
+            border-color: var(--chrome-accent);
+        }
+
+        .theme-option::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            font-weight: 600;
+            color: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .theme-midnight { background: linear-gradient(135deg, #0f0f23, #1a1a3e); color: #fff; }
+        .theme-aurora { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: #64ffda; }
+        .theme-sunset { background: linear-gradient(135deg, #2d1b3d, #6b2d5b); color: #ffb347; }
+        .theme-ocean { background: linear-gradient(135deg, #0c2340, #13678a); color: #4dd0e1; }
+        .theme-forest { background: linear-gradient(135deg, #1a2f1a, #2d4a2d); color: #81c784; }
+        .theme-minimal { background: #fafafa; color: #333; }
+        .theme-paper { background: linear-gradient(135deg, #f5f5dc, #faf8ef); color: #3d3d3d; }
+        .theme-neon { background: linear-gradient(135deg, #0a0a0a, #1a0a2e); color: #ff00ff; }
+
+        /* ==================== PRESENTATION MODE ==================== */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            cursor: none;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .presentation-mode .slide-preview {
+            max-width: 100vw;
+            max-height: 100vh;
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 12px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            cursor: default;
+        }
+
+        .presentation-mode:hover .presentation-controls {
+            opacity: 1;
+        }
+
+        .presentation-controls button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .presentation-controls button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .presentation-progress {
+            color: white;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1001;
+        }
+
+        .toast {
+            background: var(--chrome-surface);
+            color: var(--chrome-text);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-top: 8px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--chrome-accent);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--chrome-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--chrome-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--chrome-text-muted);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1200px) {
+            .app {
+                grid-template-columns: 160px 1fr 280px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+                grid-template-rows: 56px auto 1fr auto;
+            }
+
+            .slides-sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--chrome-border);
+                overflow-x: auto;
+                padding: 8px;
+            }
+
+            .slides-list {
+                flex-direction: row;
+            }
+
+            .slide-thumb {
+                min-width: 120px;
+            }
+
+            .add-slide-btn {
+                min-width: 120px;
+            }
+
+            .settings-sidebar {
+                border-left: none;
+                border-top: 1px solid var(--chrome-border);
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" data-theme="midnight">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">👆</div>
+                <span>Pointer</span>
+            </div>
+            <input type="text" class="deck-title" id="deckTitle" value="Untitled Presentation" placeholder="Presentation title...">
+            <div class="header-actions">
+                <button class="btn" onclick="exportDeck()">
+                    <span>💾</span> Save
+                </button>
+                <button class="btn" onclick="loadDeck()">
+                    <span>📂</span> Load
+                </button>
+                <button class="btn btn-primary" onclick="startPresentation()">
+                    <span>▶️</span> Present
+                </button>
+            </div>
+        </header>
+
+        <aside class="slides-sidebar">
+            <div class="slides-list" id="slidesList">
+                <!-- Slide thumbnails rendered here -->
+            </div>
+            <button class="add-slide-btn" onclick="addSlide()">+</button>
+        </aside>
+
+        <main class="main-area">
+            <div class="slide-preview-container">
+                <div class="slide-preview" id="slidePreview">
+                    <div class="slide-content" id="slideContent" data-layout="title">
+                        <!-- Slide content rendered here -->
+                    </div>
+                    <div class="slide-number" id="slideNumber">1 / 1</div>
+                </div>
+            </div>
+
+            <div class="h-splitter" id="hSplitter" title="Drag to resize editor"></div>
+
+            <div class="editor-section" id="editorSection">
+                <div class="editor-header">
+                    <span>📝</span> Markdown Editor
+                </div>
+                <textarea 
+                    class="editor-textarea" 
+                    id="editor" 
+                    placeholder="Write your slide content in Markdown..."
+                    spellcheck="true"
+                ></textarea>
+            </div>
+        </main>
+
+        <aside class="settings-sidebar">
+            <div class="settings-section">
+                <div class="settings-section-title">Slide Layout</div>
+                <div class="layout-grid" id="layoutGrid">
+                    <div class="layout-option active" data-layout="title" onclick="setLayout('title')">
+                        <div class="layout-option-preview" style="justify-content: center; align-items: center;">
+                            <div class="layout-bar title"></div>
+                            <div class="layout-bar subtitle"></div>
+                        </div>
+                        <div class="layout-option-name">Title</div>
+                    </div>
+                    <div class="layout-option" data-layout="content" onclick="setLayout('content')">
+                        <div class="layout-option-preview">
+                            <div class="layout-bar heading"></div>
+                            <div class="layout-bar text"></div>
+                            <div class="layout-bar text short"></div>
+                            <div class="layout-bar text"></div>
+                        </div>
+                        <div class="layout-option-name">Content</div>
+                    </div>
+                    <div class="layout-option" data-layout="two-column" onclick="setLayout('two-column')">
+                        <div class="layout-option-preview" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div class="layout-bar text"></div>
+                                <div class="layout-bar text short"></div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div class="layout-bar text"></div>
+                                <div class="layout-bar text short"></div>
+                            </div>
+                        </div>
+                        <div class="layout-option-name">Two Column</div>
+                    </div>
+                    <div class="layout-option" data-layout="quote" onclick="setLayout('quote')">
+                        <div class="layout-option-preview" style="justify-content: center; align-items: center;">
+                            <div style="font-size: 16px; color: var(--chrome-accent);">"</div>
+                            <div class="layout-bar text" style="width: 80%;"></div>
+                        </div>
+                        <div class="layout-option-name">Quote</div>
+                    </div>
+                    <div class="layout-option" data-layout="code" onclick="setLayout('code')">
+                        <div class="layout-option-preview">
+                            <div class="layout-bar heading" style="width: 40%;"></div>
+                            <div style="background: rgba(255,255,255,0.1); border-radius: 3px; flex: 1; margin-top: 4px;"></div>
+                        </div>
+                        <div class="layout-option-name">Code</div>
+                    </div>
+                    <div class="layout-option" data-layout="section" onclick="setLayout('section')">
+                        <div class="layout-option-preview" style="justify-content: center; align-items: center;">
+                            <div class="layout-bar title" style="background: var(--chrome-accent); opacity: 0.8;"></div>
+                        </div>
+                        <div class="layout-option-name">Section</div>
+                    </div>
+                    <div class="layout-option" data-layout="image-left" onclick="setLayout('image-left')">
+                        <div class="layout-option-preview" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                            <div style="background: rgba(255,255,255,0.15); border-radius: 3px;"></div>
+                            <div style="display: flex; flex-direction: column; gap: 2px; justify-content: center;">
+                                <div class="layout-bar text"></div>
+                                <div class="layout-bar text short"></div>
+                            </div>
+                        </div>
+                        <div class="layout-option-name">Image Left</div>
+                    </div>
+                    <div class="layout-option" data-layout="blank" onclick="setLayout('blank')">
+                        <div class="layout-option-preview">
+                            <div class="layout-bar heading" style="width: 30%;"></div>
+                            <div class="layout-bar text" style="margin-top: 4px;"></div>
+                            <div class="layout-bar text short"></div>
+                        </div>
+                        <div class="layout-option-name">Blank</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Deck Theme</div>
+                <div class="theme-grid" id="themeGrid">
+                    <div class="theme-option theme-midnight active" data-theme="midnight" data-name="Midnight" onclick="setTheme('midnight')"></div>
+                    <div class="theme-option theme-aurora" data-theme="aurora" data-name="Aurora" onclick="setTheme('aurora')"></div>
+                    <div class="theme-option theme-sunset" data-theme="sunset" data-name="Sunset" onclick="setTheme('sunset')"></div>
+                    <div class="theme-option theme-ocean" data-theme="ocean" data-name="Ocean" onclick="setTheme('ocean')"></div>
+                    <div class="theme-option theme-forest" data-theme="forest" data-name="Forest" onclick="setTheme('forest')"></div>
+                    <div class="theme-option theme-minimal" data-theme="minimal" data-name="Minimal" onclick="setTheme('minimal')"></div>
+                    <div class="theme-option theme-paper" data-theme="paper" data-name="Paper" onclick="setTheme('paper')"></div>
+                    <div class="theme-option theme-neon" data-theme="neon" data-name="Neon" onclick="setTheme('neon')"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Keyboard Shortcuts</div>
+                <div style="font-size: 12px; color: var(--chrome-text-muted); line-height: 1.8;">
+                    <div><kbd style="background: var(--chrome-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace;">←</kbd> <kbd style="background: var(--chrome-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace;">→</kbd> Navigate slides</div>
+                    <div><kbd style="background: var(--chrome-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace;">N</kbd> New slide</div>
+                    <div><kbd style="background: var(--chrome-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace;">F</kbd> Fullscreen</div>
+                    <div><kbd style="background: var(--chrome-bg); padding: 2px 6px; border-radius: 4px; font-family: monospace;">Esc</kbd> Exit presentation</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Presentation Mode Overlay -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="slide-preview" id="presentationSlide">
+            <div class="slide-content" id="presentationContent" data-layout="title"></div>
+            <div class="slide-number" id="presentationNumber">1 / 1</div>
+        </div>
+        <div class="presentation-controls">
+            <button onclick="prevSlide()" title="Previous">◀</button>
+            <span class="presentation-progress" id="presentationProgress">1 / 1</span>
+            <button onclick="nextSlide()" title="Next">▶</button>
+            <button onclick="exitPresentation()" title="Exit">✕</button>
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading -->
+    <input type="file" id="fileInput" accept=".json,.pointer" style="display: none;" onchange="handleFileLoad(event)">
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ==================== STATE ====================
+        let slides = [
+            {
+                id: 1,
+                layout: 'title',
+                content: '# Welcome to Pointer\n\nCreate beautiful presentations with Markdown'
+            }
+        ];
+        let currentSlideIndex = 0;
+        let currentTheme = 'midnight';
+        let isPresentationMode = false;
+
+        // ==================== DOM ELEMENTS ====================
+        const app = document.querySelector('.app');
+        const slidesList = document.getElementById('slidesList');
+        const slideContent = document.getElementById('slideContent');
+        const slideNumber = document.getElementById('slideNumber');
+        const editor = document.getElementById('editor');
+        const layoutGrid = document.getElementById('layoutGrid');
+        const themeGrid = document.getElementById('themeGrid');
+        const presentationMode = document.getElementById('presentationMode');
+        const presentationContent = document.getElementById('presentationContent');
+        const presentationNumber = document.getElementById('presentationNumber');
+        const presentationProgress = document.getElementById('presentationProgress');
+        const deckTitle = document.getElementById('deckTitle');
+
+        // ==================== MARKDOWN CONFIG ====================
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function(code, lang) {
+                if (Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                return code;
+            }
+        });
+
+        // ==================== RENDERING ====================
+        function renderSlidesList() {
+            slidesList.innerHTML = slides.map((slide, index) => `
+                <div class="slide-thumb ${index === currentSlideIndex ? 'active' : ''}" 
+                     onclick="selectSlide(${index})"
+                     draggable="true"
+                     data-index="${index}">
+                    <div class="slide-thumb-number">${index + 1}</div>
+                    ${slides.length > 1 ? `<button class="slide-thumb-delete" onclick="deleteSlide(${index}, event)">×</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderCurrentSlide() {
+            const slide = slides[currentSlideIndex];
+            if (!slide) return;
+
+            // Update layout
+            slideContent.setAttribute('data-layout', slide.layout);
+            
+            // Parse markdown and update content
+            let html = marked.parse(slide.content || '');
+            
+            // Handle two-column layout
+            if (slide.layout === 'two-column') {
+                const parts = slide.content.split('---');
+                if (parts.length >= 2) {
+                    const heading = parts[0].match(/^#+ .+/m)?.[0] || '';
+                    const col1Content = parts[0].replace(/^#+ .+/m, '').trim();
+                    const col2Content = parts[1].trim();
+                    html = `
+                        ${heading ? marked.parse(heading) : ''}
+                        <div class="column">${marked.parse(col1Content)}</div>
+                        <div class="column">${marked.parse(col2Content)}</div>
+                    `;
+                }
+            }
+
+            slideContent.innerHTML = html;
+            slideNumber.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+
+            // Update editor
+            editor.value = slide.content;
+
+            // Update layout selection
+            document.querySelectorAll('.layout-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.layout === slide.layout);
+            });
+
+            // Syntax highlighting
+            slideContent.querySelectorAll('pre code').forEach(block => {
+                Prism.highlightElement(block);
+            });
+        }
+
+        function renderPresentationSlide() {
+            const slide = slides[currentSlideIndex];
+            if (!slide) return;
+
+            presentationContent.setAttribute('data-layout', slide.layout);
+            
+            let html = marked.parse(slide.content || '');
+            
+            if (slide.layout === 'two-column') {
+                const parts = slide.content.split('---');
+                if (parts.length >= 2) {
+                    const heading = parts[0].match(/^#+ .+/m)?.[0] || '';
+                    const col1Content = parts[0].replace(/^#+ .+/m, '').trim();
+                    const col2Content = parts[1].trim();
+                    html = `
+                        ${heading ? marked.parse(heading) : ''}
+                        <div class="column">${marked.parse(col1Content)}</div>
+                        <div class="column">${marked.parse(col2Content)}</div>
+                    `;
+                }
+            }
+
+            presentationContent.innerHTML = html;
+            presentationNumber.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+            presentationProgress.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+
+            presentationContent.querySelectorAll('pre code').forEach(block => {
+                Prism.highlightElement(block);
+            });
+        }
+
+        // ==================== SLIDE OPERATIONS ====================
+        function selectSlide(index) {
+            currentSlideIndex = index;
+            renderSlidesList();
+            renderCurrentSlide();
+        }
+
+        function addSlide() {
+            const newSlide = {
+                id: Date.now(),
+                layout: 'content',
+                content: '## New Slide\n\n- Point one\n- Point two\n- Point three'
+            };
+            slides.splice(currentSlideIndex + 1, 0, newSlide);
+            currentSlideIndex++;
+            renderSlidesList();
+            renderCurrentSlide();
+            saveToLocalStorage();
+            showToast('Slide added');
+        }
+
+        function deleteSlide(index, event) {
+            event.stopPropagation();
+            if (slides.length <= 1) return;
+            
+            slides.splice(index, 1);
+            if (currentSlideIndex >= slides.length) {
+                currentSlideIndex = slides.length - 1;
+            }
+            renderSlidesList();
+            renderCurrentSlide();
+            saveToLocalStorage();
+            showToast('Slide deleted');
+        }
+
+        function setLayout(layout) {
+            slides[currentSlideIndex].layout = layout;
+            renderCurrentSlide();
+            saveToLocalStorage();
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            app.setAttribute('data-theme', theme);
+            presentationMode.querySelector('.slide-preview')?.setAttribute('data-theme', theme);
+            
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.theme === theme);
+            });
+            
+            saveToLocalStorage();
+        }
+
+        // ==================== NAVIGATION ====================
+        function nextSlide() {
+            if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                renderSlidesList();
+                renderCurrentSlide();
+                if (isPresentationMode) renderPresentationSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                renderSlidesList();
+                renderCurrentSlide();
+                if (isPresentationMode) renderPresentationSlide();
+            }
+        }
+
+        // ==================== PRESENTATION MODE ====================
+        function startPresentation() {
+            isPresentationMode = true;
+            presentationMode.classList.add('active');
+            presentationMode.querySelector('.slide-preview').style.background = 'var(--slide-bg)';
+            renderPresentationSlide();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function exitPresentation() {
+            isPresentationMode = false;
+            presentationMode.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function exportDeck() {
+            const deck = {
+                title: deckTitle.value,
+                theme: currentTheme,
+                slides: slides,
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(deck, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${deckTitle.value.replace(/[^a-z0-9]/gi, '_')}.pointer`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Presentation saved!');
+        }
+
+        function loadDeck() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const deck = JSON.parse(e.target.result);
+                    deckTitle.value = deck.title || 'Untitled Presentation';
+                    currentTheme = deck.theme || 'midnight';
+                    slides = deck.slides || slides;
+                    currentSlideIndex = 0;
+                    
+                    setTheme(currentTheme);
+                    renderSlidesList();
+                    renderCurrentSlide();
+                    showToast('Presentation loaded!');
+                } catch (err) {
+                    showToast('Error loading file');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function saveToLocalStorage() {
+            const deck = {
+                title: deckTitle.value,
+                theme: currentTheme,
+                slides: slides,
+                currentSlideIndex: currentSlideIndex
+            };
+            localStorage.setItem('pointer-deck', JSON.stringify(deck));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('pointer-deck');
+            if (saved) {
+                try {
+                    const deck = JSON.parse(saved);
+                    deckTitle.value = deck.title || 'Untitled Presentation';
+                    currentTheme = deck.theme || 'midnight';
+                    slides = deck.slides || slides;
+                    currentSlideIndex = deck.currentSlideIndex || 0;
+                    setTheme(currentTheme);
+                } catch (err) {
+                    console.error('Error loading saved deck:', err);
+                }
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ==================== EDITOR RESIZING ====================
+        const hSplitter = document.getElementById('hSplitter');
+        const editorSection = document.getElementById('editorSection');
+        const mainArea = document.querySelector('.main-area');
+        let isResizingEditor = false;
+
+        hSplitter.addEventListener('mousedown', (e) => {
+            isResizingEditor = true;
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizingEditor) return;
+            
+            const mainRect = mainArea.getBoundingClientRect();
+            const mouseY = e.clientY;
+            const mainBottom = mainRect.bottom;
+            
+            // Calculate new editor height from the bottom
+            let newHeight = mainBottom - mouseY - 8; // 8px for splitter
+            
+            // Set min and max heights
+            const minHeight = 120;
+            const maxHeight = mainRect.height * 0.7;
+            
+            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+            editorSection.style.height = newHeight + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizingEditor) {
+                isResizingEditor = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                // Save editor height preference
+                localStorage.setItem('pointer-editor-height', editorSection.style.height);
+            }
+        });
+
+        // Restore editor height on load
+        const savedEditorHeight = localStorage.getItem('pointer-editor-height');
+        if (savedEditorHeight) {
+            editorSection.style.height = savedEditorHeight;
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        editor.addEventListener('input', () => {
+            slides[currentSlideIndex].content = editor.value;
+            renderCurrentSlide();
+            saveToLocalStorage();
+        });
+
+        deckTitle.addEventListener('input', saveToLocalStorage);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger if typing in editor or title
+            if (e.target === editor || e.target === deckTitle) {
+                if (e.key === 'Escape') {
+                    e.target.blur();
+                }
+                return;
+            }
+
+            switch(e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case 'n':
+                case 'N':
+                    addSlide();
+                    break;
+                case 'f':
+                case 'F':
+                    if (!isPresentationMode) startPresentation();
+                    break;
+                case 'Escape':
+                    if (isPresentationMode) exitPresentation();
+                    break;
+            }
+        });
+
+        // Presentation mode click to advance
+        presentationMode.addEventListener('click', (e) => {
+            if (e.target.closest('.presentation-controls')) return;
+            nextSlide();
+        });
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadFromLocalStorage();
+            renderSlidesList();
+            renderCurrentSlide();
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

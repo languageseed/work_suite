@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey - Timeline Creator</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* App Chrome */
+            --chrome-bg: #18181b;
+            --chrome-surface: #27272a;
+            --chrome-elevated: #3f3f46;
+            --chrome-border: #3f3f46;
+            --chrome-text: #fafafa;
+            --chrome-text-muted: #a1a1aa;
+            --chrome-accent: #f59e0b;
+            --chrome-accent-hover: #fbbf24;
+            
+            /* Timeline Theme - Default (Amber) */
+            --timeline-bg: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+            --timeline-line: #f59e0b;
+            --timeline-node: #f59e0b;
+            --timeline-node-border: #fbbf24;
+            --timeline-card-bg: #292524;
+            --timeline-card-border: #44403c;
+            --timeline-text: #fafaf9;
+            --timeline-text-muted: #a8a29e;
+            --timeline-date: #f59e0b;
+            
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'Source Sans 3', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        /* Timeline Themes */
+        [data-theme="amber"] {
+            --timeline-bg: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+            --timeline-line: #f59e0b;
+            --timeline-node: #f59e0b;
+            --timeline-node-border: #fbbf24;
+            --timeline-card-bg: #292524;
+            --timeline-card-border: #44403c;
+            --timeline-text: #fafaf9;
+            --timeline-text-muted: #a8a29e;
+            --timeline-date: #f59e0b;
+        }
+
+        [data-theme="emerald"] {
+            --timeline-bg: linear-gradient(180deg, #022c22 0%, #064e3b 100%);
+            --timeline-line: #10b981;
+            --timeline-node: #10b981;
+            --timeline-node-border: #34d399;
+            --timeline-card-bg: #064e3b;
+            --timeline-card-border: #065f46;
+            --timeline-text: #ecfdf5;
+            --timeline-text-muted: #6ee7b7;
+            --timeline-date: #34d399;
+        }
+
+        [data-theme="violet"] {
+            --timeline-bg: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            --timeline-line: #8b5cf6;
+            --timeline-node: #8b5cf6;
+            --timeline-node-border: #a78bfa;
+            --timeline-card-bg: #312e81;
+            --timeline-card-border: #4338ca;
+            --timeline-text: #f5f3ff;
+            --timeline-text-muted: #c4b5fd;
+            --timeline-date: #a78bfa;
+        }
+
+        [data-theme="rose"] {
+            --timeline-bg: linear-gradient(180deg, #1c1917 0%, #44403c 100%);
+            --timeline-line: #f43f5e;
+            --timeline-node: #f43f5e;
+            --timeline-node-border: #fb7185;
+            --timeline-card-bg: #292524;
+            --timeline-card-border: #57534e;
+            --timeline-text: #fafaf9;
+            --timeline-text-muted: #d6d3d1;
+            --timeline-date: #fb7185;
+        }
+
+        [data-theme="sky"] {
+            --timeline-bg: linear-gradient(180deg, #0c4a6e 0%, #075985 100%);
+            --timeline-line: #0ea5e9;
+            --timeline-node: #0ea5e9;
+            --timeline-node-border: #38bdf8;
+            --timeline-card-bg: #0369a1;
+            --timeline-card-border: #0284c7;
+            --timeline-text: #f0f9ff;
+            --timeline-text-muted: #7dd3fc;
+            --timeline-date: #38bdf8;
+        }
+
+        [data-theme="minimal"] {
+            --timeline-bg: #ffffff;
+            --timeline-line: #d4d4d4;
+            --timeline-node: #525252;
+            --timeline-node-border: #737373;
+            --timeline-card-bg: #fafafa;
+            --timeline-card-border: #e5e5e5;
+            --timeline-text: #171717;
+            --timeline-text-muted: #737373;
+            --timeline-date: #525252;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--chrome-bg);
+            color: var(--chrome-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            grid-column: 1 / -1;
+            background: var(--chrome-surface);
+            border-bottom: 1px solid var(--chrome-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--chrome-accent) 0%, #ea580c 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .journey-title {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--chrome-text);
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            width: 280px;
+            text-align: center;
+        }
+
+        .journey-title:hover {
+            background: var(--chrome-elevated);
+        }
+
+        .journey-title:focus {
+            outline: none;
+            border-color: var(--chrome-accent);
+            background: var(--chrome-elevated);
+        }
+
+        .layout-toggle {
+            display: flex;
+            background: var(--chrome-bg);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .layout-btn {
+            background: transparent;
+            border: none;
+            color: var(--chrome-text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .layout-btn:hover {
+            color: var(--chrome-text);
+        }
+
+        .layout-btn.active {
+            background: var(--chrome-accent);
+            color: var(--chrome-bg);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--chrome-elevated);
+            border: 1px solid var(--chrome-border);
+            color: var(--chrome-text);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: var(--chrome-accent);
+            border-color: var(--chrome-accent);
+            color: var(--chrome-bg);
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            background: var(--chrome-surface);
+            border-right: 1px solid var(--chrome-border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--chrome-border);
+        }
+
+        .sidebar-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--chrome-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .add-event-btn {
+            width: 100%;
+            background: var(--chrome-accent);
+            border: none;
+            color: var(--chrome-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .add-event-btn:hover {
+            background: var(--chrome-accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Events List */
+        .events-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .event-item {
+            background: var(--chrome-bg);
+            border: 1px solid var(--chrome-border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .event-item:hover {
+            border-color: var(--chrome-accent);
+            transform: translateX(4px);
+        }
+
+        .event-item.selected {
+            border-color: var(--chrome-accent);
+            background: var(--chrome-elevated);
+        }
+
+        .event-item-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .event-item-date {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--chrome-accent);
+            font-weight: 500;
+        }
+
+        .event-item-icon {
+            font-size: 16px;
+        }
+
+        .event-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--chrome-text);
+            margin-bottom: 4px;
+        }
+
+        .event-item-desc {
+            font-size: 12px;
+            color: var(--chrome-text-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .event-item-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            color: var(--chrome-text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover .event-item-delete {
+            opacity: 1;
+        }
+
+        .event-item-delete:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Theme Selector */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .theme-option {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-option.active {
+            border-color: white;
+        }
+
+        .theme-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .theme-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .theme-emerald { background: linear-gradient(135deg, #10b981, #059669); }
+        .theme-violet { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .theme-rose { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+        .theme-sky { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .theme-minimal { background: linear-gradient(135deg, #f5f5f5, #d4d4d4); }
+
+        /* ==================== TIMELINE CANVAS ==================== */
+        .timeline-canvas {
+            background: var(--timeline-bg);
+            overflow: auto;
+            position: relative;
+        }
+
+        .timeline-container {
+            min-height: 100%;
+            padding: 60px;
+            position: relative;
+        }
+
+        /* Vertical Timeline */
+        .timeline-vertical {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timeline-vertical::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--timeline-line);
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .timeline-event {
+            position: relative;
+            margin-bottom: 48px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .timeline-event:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-event:nth-child(odd) {
+            flex-direction: row;
+        }
+
+        .timeline-event:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-event-content {
+            width: calc(50% - 40px);
+            background: var(--timeline-card-bg);
+            border: 1px solid var(--timeline-card-border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .timeline-event-content:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        .timeline-event:nth-child(odd) .timeline-event-content {
+            margin-right: auto;
+            text-align: right;
+        }
+
+        .timeline-event:nth-child(even) .timeline-event-content {
+            margin-left: auto;
+            text-align: left;
+        }
+
+        .timeline-node {
+            position: absolute;
+            left: 50%;
+            top: 24px;
+            width: 20px;
+            height: 20px;
+            background: var(--timeline-node);
+            border: 4px solid var(--timeline-node-border);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .timeline-event:hover .timeline-node {
+            transform: translateX(-50%) scale(1.3);
+        }
+
+        .timeline-event-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-event-date {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--timeline-date);
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-event-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--timeline-text);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .timeline-event-desc {
+            font-size: 15px;
+            color: var(--timeline-text-muted);
+            line-height: 1.6;
+        }
+
+        /* Horizontal Timeline */
+        .timeline-horizontal {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            padding: 100px 40px;
+            min-width: max-content;
+            position: relative;
+        }
+
+        .timeline-horizontal::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 160px;
+            height: 4px;
+            background: var(--timeline-line);
+            border-radius: 2px;
+        }
+
+        .timeline-horizontal .timeline-event {
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 0;
+            min-width: 280px;
+            max-width: 320px;
+        }
+
+        .timeline-horizontal .timeline-event-content {
+            width: 100%;
+            text-align: center;
+            margin: 0;
+        }
+
+        .timeline-horizontal .timeline-event:nth-child(odd) .timeline-event-content {
+            text-align: center;
+            margin: 0;
+        }
+
+        .timeline-horizontal .timeline-event:nth-child(even) .timeline-event-content {
+            text-align: center;
+            margin: 0;
+        }
+
+        .timeline-horizontal .timeline-node {
+            position: relative;
+            left: auto;
+            top: auto;
+            transform: none;
+            margin: 20px 0;
+        }
+
+        .timeline-horizontal .timeline-event:hover .timeline-node {
+            transform: scale(1.3);
+        }
+
+        /* Empty State */
+        .timeline-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--timeline-text-muted);
+            text-align: center;
+            padding: 60px;
+        }
+
+        .timeline-empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .timeline-empty-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-empty-hint {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--chrome-surface);
+            border-radius: 16px;
+            width: 480px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--chrome-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--chrome-text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--chrome-text);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--chrome-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--chrome-bg);
+            border: 1px solid var(--chrome-border);
+            color: var(--chrome-text);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--chrome-accent);
+        }
+
+        .form-input::placeholder {
+            color: var(--chrome-text-muted);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .icon-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+        }
+
+        .icon-option {
+            aspect-ratio: 1;
+            background: var(--chrome-bg);
+            border: 2px solid var(--chrome-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-option:hover {
+            border-color: var(--chrome-accent);
+            transform: scale(1.1);
+        }
+
+        .icon-option.selected {
+            border-color: var(--chrome-accent);
+            background: var(--chrome-accent);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--chrome-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--chrome-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--chrome-elevated);
+            border-color: var(--chrome-border);
+            color: var(--chrome-text);
+        }
+
+        .btn-primary {
+            background: var(--chrome-accent);
+            border-color: var(--chrome-accent);
+            color: var(--chrome-bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--chrome-accent-hover);
+            border-color: var(--chrome-accent-hover);
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1001;
+        }
+
+        .toast {
+            background: var(--chrome-surface);
+            border: 1px solid var(--chrome-border);
+            color: var(--chrome-text);
+            padding: 14px 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-top: 8px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--chrome-border);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--chrome-text-muted);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .timeline-vertical::before {
+                left: 20px;
+            }
+
+            .timeline-event {
+                flex-direction: column !important;
+            }
+
+            .timeline-event-content {
+                width: 100% !important;
+                margin-left: 50px !important;
+                text-align: left !important;
+            }
+
+            .timeline-node {
+                left: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" data-theme="amber">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🛤️</div>
+                <span>Journey</span>
+            </div>
+            <div class="header-center">
+                <input type="text" class="journey-title" id="journeyTitle" value="My Timeline" placeholder="Timeline title...">
+                <div class="layout-toggle">
+                    <button class="layout-btn active" data-layout="vertical" onclick="setLayout('vertical')">↕️ Vertical</button>
+                    <button class="layout-btn" data-layout="horizontal" onclick="setLayout('horizontal')">↔️ Horizontal</button>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="exportTimeline()">📥 Export</button>
+                <button class="btn" onclick="saveTimeline()">💾 Save</button>
+                <button class="btn" onclick="loadTimeline()">📂 Load</button>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <button class="add-event-btn" onclick="openModal()">
+                    <span>+</span> Add Event
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Theme</div>
+                <div class="theme-grid">
+                    <div class="theme-option theme-amber active" data-theme="amber" onclick="setTheme('amber')"></div>
+                    <div class="theme-option theme-emerald" data-theme="emerald" onclick="setTheme('emerald')"></div>
+                    <div class="theme-option theme-violet" data-theme="violet" onclick="setTheme('violet')"></div>
+                    <div class="theme-option theme-rose" data-theme="rose" onclick="setTheme('rose')"></div>
+                    <div class="theme-option theme-sky" data-theme="sky" onclick="setTheme('sky')"></div>
+                    <div class="theme-option theme-minimal" data-theme="minimal" onclick="setTheme('minimal')"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-section" style="flex-shrink: 0;">
+                <div class="sidebar-title">Events (<span id="eventCount">0</span>)</div>
+            </div>
+
+            <div class="events-list" id="eventsList">
+                <!-- Events rendered here -->
+            </div>
+        </aside>
+
+        <main class="timeline-canvas" id="timelineCanvas">
+            <div class="timeline-container">
+                <div class="timeline-vertical" id="timeline">
+                    <!-- Timeline rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Add Event</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-input" id="eventDate" placeholder="e.g., 2024, Jan 2024, March 15, 2024">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="eventTitle" placeholder="Event title...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="eventDesc" placeholder="Describe this event..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon</label>
+                    <div class="icon-picker" id="iconPicker">
+                        <div class="icon-option selected" data-icon="🎯">🎯</div>
+                        <div class="icon-option" data-icon="🚀">🚀</div>
+                        <div class="icon-option" data-icon="⭐">⭐</div>
+                        <div class="icon-option" data-icon="💡">💡</div>
+                        <div class="icon-option" data-icon="🎉">🎉</div>
+                        <div class="icon-option" data-icon="📍">📍</div>
+                        <div class="icon-option" data-icon="🏆">🏆</div>
+                        <div class="icon-option" data-icon="💼">💼</div>
+                        <div class="icon-option" data-icon="📚">📚</div>
+                        <div class="icon-option" data-icon="🎓">🎓</div>
+                        <div class="icon-option" data-icon="💰">💰</div>
+                        <div class="icon-option" data-icon="❤️">❤️</div>
+                        <div class="icon-option" data-icon="🏠">🏠</div>
+                        <div class="icon-option" data-icon="✈️">✈️</div>
+                        <div class="icon-option" data-icon="🎵">🎵</div>
+                        <div class="icon-option" data-icon="🔧">🔧</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <input type="file" id="fileInput" accept=".json,.journey" style="display:none" onchange="handleFileLoad(event)">
+
+    <script>
+        // ==================== STATE ====================
+        let events = [];
+        let currentTheme = 'amber';
+        let currentLayout = 'vertical';
+        let editingEventId = null;
+        let selectedIcon = '🎯';
+
+        // ==================== DOM ====================
+        const app = document.querySelector('.app');
+        const timeline = document.getElementById('timeline');
+        const eventsList = document.getElementById('eventsList');
+        const eventCount = document.getElementById('eventCount');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const journeyTitle = document.getElementById('journeyTitle');
+
+        // ==================== ICONS ====================
+        document.querySelectorAll('.icon-option').forEach(icon => {
+            icon.addEventListener('click', () => {
+                document.querySelectorAll('.icon-option').forEach(i => i.classList.remove('selected'));
+                icon.classList.add('selected');
+                selectedIcon = icon.dataset.icon;
+            });
+        });
+
+        // ==================== THEME ====================
+        function setTheme(theme) {
+            currentTheme = theme;
+            app.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.theme === theme);
+            });
+            saveToLocalStorage();
+        }
+
+        // ==================== LAYOUT ====================
+        function setLayout(layout) {
+            currentLayout = layout;
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.layout === layout);
+            });
+            renderTimeline();
+            saveToLocalStorage();
+        }
+
+        // ==================== MODAL ====================
+        function openModal(eventId = null) {
+            editingEventId = eventId;
+            
+            if (eventId) {
+                const event = events.find(e => e.id === eventId);
+                if (event) {
+                    modalTitle.textContent = 'Edit Event';
+                    document.getElementById('eventDate').value = event.date;
+                    document.getElementById('eventTitle').value = event.title;
+                    document.getElementById('eventDesc').value = event.description;
+                    selectedIcon = event.icon;
+                    document.querySelectorAll('.icon-option').forEach(i => {
+                        i.classList.toggle('selected', i.dataset.icon === event.icon);
+                    });
+                }
+            } else {
+                modalTitle.textContent = 'Add Event';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDesc').value = '';
+                selectedIcon = '🎯';
+                document.querySelectorAll('.icon-option').forEach(i => {
+                    i.classList.toggle('selected', i.dataset.icon === '🎯');
+                });
+            }
+            
+            modalOverlay.classList.add('visible');
+            document.getElementById('eventDate').focus();
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== modalOverlay) return;
+            modalOverlay.classList.remove('visible');
+            editingEventId = null;
+        }
+
+        function saveEvent() {
+            const date = document.getElementById('eventDate').value.trim();
+            const title = document.getElementById('eventTitle').value.trim();
+            const description = document.getElementById('eventDesc').value.trim();
+            
+            if (!date || !title) {
+                showToast('Please enter a date and title', 'error');
+                return;
+            }
+            
+            if (editingEventId) {
+                const event = events.find(e => e.id === editingEventId);
+                if (event) {
+                    event.date = date;
+                    event.title = title;
+                    event.description = description;
+                    event.icon = selectedIcon;
+                }
+                showToast('Event updated');
+            } else {
+                events.push({
+                    id: Date.now(),
+                    date,
+                    title,
+                    description,
+                    icon: selectedIcon
+                });
+                showToast('Event added');
+            }
+            
+            closeModal();
+            renderTimeline();
+            renderEventsList();
+            saveToLocalStorage();
+        }
+
+        function deleteEvent(eventId) {
+            if (confirm('Delete this event?')) {
+                events = events.filter(e => e.id !== eventId);
+                renderTimeline();
+                renderEventsList();
+                saveToLocalStorage();
+                showToast('Event deleted');
+            }
+        }
+
+        // ==================== RENDER ====================
+        function renderTimeline() {
+            if (events.length === 0) {
+                timeline.innerHTML = `
+                    <div class="timeline-empty">
+                        <div class="timeline-empty-icon">🛤️</div>
+                        <div class="timeline-empty-text">Your journey begins here</div>
+                        <div class="timeline-empty-hint">Add your first event to start building your timeline</div>
+                    </div>
+                `;
+                timeline.className = '';
+                return;
+            }
+            
+            // Sort events by date (simple string sort, works for most formats)
+            const sortedEvents = [...events].sort((a, b) => {
+                return a.date.localeCompare(b.date);
+            });
+            
+            timeline.className = currentLayout === 'horizontal' ? 'timeline-horizontal' : 'timeline-vertical';
+            
+            timeline.innerHTML = sortedEvents.map(event => `
+                <div class="timeline-event" data-id="${event.id}" onclick="openModal(${event.id})">
+                    <div class="timeline-event-content">
+                        <div class="timeline-event-icon">${event.icon}</div>
+                        <div class="timeline-event-date">${escapeHtml(event.date)}</div>
+                        <div class="timeline-event-title">${escapeHtml(event.title)}</div>
+                        ${event.description ? `<div class="timeline-event-desc">${escapeHtml(event.description)}</div>` : ''}
+                    </div>
+                    <div class="timeline-node"></div>
+                </div>
+            `).join('');
+        }
+
+        function renderEventsList() {
+            eventCount.textContent = events.length;
+            
+            if (events.length === 0) {
+                eventsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--chrome-text-muted);">
+                        <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;">📭</div>
+                        <div style="font-size: 13px;">No events yet</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date));
+            
+            eventsList.innerHTML = sortedEvents.map(event => `
+                <div class="event-item" onclick="openModal(${event.id})">
+                    <button class="event-item-delete" onclick="event.stopPropagation(); deleteEvent(${event.id})">✕</button>
+                    <div class="event-item-header">
+                        <div class="event-item-date">${escapeHtml(event.date)}</div>
+                        <div class="event-item-icon">${event.icon}</div>
+                    </div>
+                    <div class="event-item-title">${escapeHtml(event.title)}</div>
+                    ${event.description ? `<div class="event-item-desc">${escapeHtml(event.description)}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function saveTimeline() {
+            const data = {
+                title: journeyTitle.value,
+                theme: currentTheme,
+                layout: currentLayout,
+                events: events,
+                savedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${journeyTitle.value.replace(/[^a-z0-9]/gi, '_')}.journey`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Timeline saved!');
+        }
+
+        function loadTimeline() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    journeyTitle.value = data.title || 'My Timeline';
+                    currentTheme = data.theme || 'amber';
+                    currentLayout = data.layout || 'vertical';
+                    events = data.events || [];
+                    
+                    setTheme(currentTheme);
+                    setLayout(currentLayout);
+                    renderTimeline();
+                    renderEventsList();
+                    saveToLocalStorage();
+                    showToast('Timeline loaded!');
+                } catch (err) {
+                    showToast('Error loading file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function exportTimeline() {
+            // Export as HTML
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${escapeHtml(journeyTitle.value)}</title>
+    <style>
+        body { font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 40px; background: #1c1917; color: #fafaf9; }
+        h1 { text-align: center; margin-bottom: 40px; }
+        .event { margin-bottom: 30px; padding-left: 20px; border-left: 3px solid #f59e0b; }
+        .date { color: #f59e0b; font-size: 14px; margin-bottom: 4px; }
+        .title { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+        .desc { color: #a8a29e; line-height: 1.6; }
+        .icon { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1>${escapeHtml(journeyTitle.value)}</h1>
+    ${events.map(e => `
+    <div class="event">
+        <div class="icon">${e.icon}</div>
+        <div class="date">${escapeHtml(e.date)}</div>
+        <div class="title">${escapeHtml(e.title)}</div>
+        ${e.description ? `<div class="desc">${escapeHtml(e.description)}</div>` : ''}
+    </div>
+    `).join('')}
+</body>
+</html>`;
+            
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${journeyTitle.value.replace(/[^a-z0-9]/gi, '_')}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported as HTML!');
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                title: journeyTitle.value,
+                theme: currentTheme,
+                layout: currentLayout,
+                events: events
+            };
+            localStorage.setItem('journey-data', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('journey-data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    journeyTitle.value = data.title || 'My Timeline';
+                    currentTheme = data.theme || 'amber';
+                    currentLayout = data.layout || 'vertical';
+                    events = data.events || [];
+                    setTheme(currentTheme);
+                    setLayout(currentLayout);
+                } catch (e) {
+                    console.error('Error loading saved data:', e);
+                }
+            }
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span>${type === 'success' ? '✓' : '⚠️'}</span> ${message}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.key === 'n' && !e.target.closest('input, textarea') && !modalOverlay.classList.contains('visible')) {
+                openModal();
+            }
+        });
+
+        journeyTitle.addEventListener('input', saveToLocalStorage);
+
+        // ==================== INIT ====================
+        function init() {
+            loadFromLocalStorage();
+            
+            // Add sample data if empty
+            if (events.length === 0) {
+                events = [
+                    { id: 1, date: '2020', title: 'The Beginning', description: 'Every journey starts with a single step. This is where it all began.', icon: '🚀' },
+                    { id: 2, date: '2021', title: 'First Milestone', description: 'Reached our first major achievement and learned valuable lessons along the way.', icon: '⭐' },
+                    { id: 3, date: '2022', title: 'Growth Phase', description: 'Expanded horizons and explored new possibilities. The team doubled in size.', icon: '📈' },
+                    { id: 4, date: '2023', title: 'Major Launch', description: 'Launched our flagship product to great success. A pivotal moment in our journey.', icon: '🎉' },
+                    { id: 5, date: '2024', title: 'Looking Forward', description: 'The future is bright with endless possibilities ahead.', icon: '🔮' },
+                ];
+                saveToLocalStorage();
+            }
+            
+            renderTimeline();
+            renderEventsList();
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

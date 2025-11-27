@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Done - Kanban Board</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-app: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-card: #334155;
+            --bg-card-hover: #3e4c63;
+            --bg-column: #1e293b;
+            --border-color: #334155;
+            --border-light: #475569;
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            
+            /* Labels */
+            --label-red: #ef4444;
+            --label-orange: #f97316;
+            --label-yellow: #eab308;
+            --label-green: #22c55e;
+            --label-blue: #3b82f6;
+            --label-purple: #a855f7;
+            --label-pink: #ec4899;
+            --label-gray: #64748b;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            
+            --column-width: 320px;
+            --card-radius: 10px;
+        }
+
+        /* Themes */
+        [data-theme="slate"] {
+            --bg-app: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-card: #334155;
+            --bg-card-hover: #3e4c63;
+            --bg-column: #1e293b;
+            --border-color: #334155;
+            --accent: #3b82f6;
+        }
+
+        [data-theme="zinc"] {
+            --bg-app: #18181b;
+            --bg-surface: #27272a;
+            --bg-card: #3f3f46;
+            --bg-card-hover: #52525b;
+            --bg-column: #27272a;
+            --border-color: #3f3f46;
+            --accent: #a855f7;
+        }
+
+        [data-theme="stone"] {
+            --bg-app: #1c1917;
+            --bg-surface: #292524;
+            --bg-card: #44403c;
+            --bg-card-hover: #57534e;
+            --bg-column: #292524;
+            --border-color: #44403c;
+            --accent: #f97316;
+        }
+
+        [data-theme="emerald"] {
+            --bg-app: #022c22;
+            --bg-surface: #064e3b;
+            --bg-card: #065f46;
+            --bg-card-hover: #047857;
+            --bg-column: #064e3b;
+            --border-color: #065f46;
+            --accent: #10b981;
+        }
+
+        [data-theme="light"] {
+            --bg-app: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-card: #f8fafc;
+            --bg-card-hover: #f1f5f9;
+            --bg-column: #ffffff;
+            --border-color: #e2e8f0;
+            --border-light: #cbd5e1;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .board-title {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 240px;
+            font-family: inherit;
+        }
+
+        .board-title:hover {
+            background: var(--bg-card);
+        }
+
+        .board-title:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-card);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: var(--bg-app);
+            border-radius: 8px;
+        }
+
+        .theme-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .theme-dot:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-dot.active {
+            border-color: white;
+        }
+
+        .theme-slate { background: #3b82f6; }
+        .theme-zinc { background: #a855f7; }
+        .theme-stone { background: #f97316; }
+        .theme-emerald { background: #10b981; }
+        .theme-light { background: linear-gradient(135deg, #f1f5f9 50%, #1e293b 50%); }
+
+        /* ==================== BOARD ==================== */
+        .board {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        /* ==================== COLUMN ==================== */
+        .column {
+            width: var(--column-width);
+            min-width: var(--column-width);
+            background: var(--bg-column);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+
+        .column-header {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .column-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .column-title {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 8px;
+            margin: -4px -8px;
+            border-radius: 4px;
+            font-family: inherit;
+            width: 160px;
+        }
+
+        .column-title:hover {
+            background: var(--bg-card);
+        }
+
+        .column-title:focus {
+            outline: none;
+            background: var(--bg-card);
+        }
+
+        .column-count {
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .column-menu {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .column-menu:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .column-cards {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .column-cards.drag-over {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .add-card-btn {
+            margin: 12px;
+            padding: 10px 14px;
+            background: transparent;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .add-card-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* ==================== CARD ==================== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 14px;
+            cursor: grab;
+            transition: all 0.15s;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .card-labels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            height: 6px;
+            width: 36px;
+            border-radius: 3px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .card-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-due {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: var(--bg-surface);
+            border-radius: 4px;
+        }
+
+        .card-due.overdue {
+            color: var(--label-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .card-due.soon {
+            color: var(--label-yellow);
+            background: rgba(234, 179, 8, 0.1);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .card-action {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .card-action:hover {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+        }
+
+        .card-action.delete:hover {
+            color: var(--label-red);
+        }
+
+        /* ==================== ADD COLUMN ==================== */
+        .add-column {
+            min-width: 280px;
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+            padding: 20px;
+        }
+
+        .add-column:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            width: 500px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .label-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .label-option {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .label-option:hover {
+            transform: scale(1.1);
+        }
+
+        .label-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: 1px solid var(--label-red);
+            color: var(--label-red);
+        }
+
+        .btn-delete:hover {
+            background: var(--label-red);
+            color: white;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-top: 8px;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .column {
+                width: 280px;
+                min-width: 280px;
+            }
+
+            .board {
+                padding: 12px;
+            }
+
+            .header-left {
+                gap: 8px;
+            }
+
+            .board-title {
+                width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" data-theme="slate">
+        <header>
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">✓</div>
+                    <span>Done</span>
+                </div>
+                <input type="text" class="board-title" id="boardTitle" value="My Project" placeholder="Board name...">
+            </div>
+            <div class="header-actions">
+                <div class="theme-selector">
+                    <div class="theme-dot theme-slate active" data-theme="slate" onclick="setTheme('slate')"></div>
+                    <div class="theme-dot theme-zinc" data-theme="zinc" onclick="setTheme('zinc')"></div>
+                    <div class="theme-dot theme-stone" data-theme="stone" onclick="setTheme('stone')"></div>
+                    <div class="theme-dot theme-emerald" data-theme="emerald" onclick="setTheme('emerald')"></div>
+                    <div class="theme-dot theme-light" data-theme="light" onclick="setTheme('light')"></div>
+                </div>
+                <button class="btn" onclick="saveBoard()">💾 Save</button>
+                <button class="btn" onclick="loadBoard()">📂 Load</button>
+            </div>
+        </header>
+
+        <div class="board" id="board">
+            <!-- Columns rendered here -->
+        </div>
+    </div>
+
+    <!-- Card Modal -->
+    <div class="modal-overlay" id="cardModal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Add Card</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="cardTitle" placeholder="Card title...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-input" id="cardDesc" placeholder="Add a description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" class="form-input" id="cardDue">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Labels</label>
+                    <div class="label-picker" id="labelPicker">
+                        <div class="label-option" data-color="#ef4444" style="background: #ef4444"></div>
+                        <div class="label-option" data-color="#f97316" style="background: #f97316"></div>
+                        <div class="label-option" data-color="#eab308" style="background: #eab308"></div>
+                        <div class="label-option" data-color="#22c55e" style="background: #22c55e"></div>
+                        <div class="label-option" data-color="#3b82f6" style="background: #3b82f6"></div>
+                        <div class="label-option" data-color="#a855f7" style="background: #a855f7"></div>
+                        <div class="label-option" data-color="#ec4899" style="background: #ec4899"></div>
+                        <div class="label-option" data-color="#64748b" style="background: #64748b"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-delete" id="deleteCardBtn" onclick="deleteCard()" style="display: none;">🗑️ Delete</button>
+                <div style="flex: 1;"></div>
+                <button class="btn" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCard()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <input type="file" id="fileInput" accept=".json,.done" style="display:none" onchange="handleFileLoad(event)">
+
+    <script>
+        // ==================== STATE ====================
+        let columns = [
+            { id: 'todo', title: 'To Do', cards: [] },
+            { id: 'progress', title: 'In Progress', cards: [] },
+            { id: 'done', title: 'Done', cards: [] }
+        ];
+        let currentTheme = 'slate';
+        let editingCard = null;
+        let editingColumnId = null;
+        let selectedLabels = [];
+        let draggedCard = null;
+        let draggedFromColumn = null;
+
+        // ==================== DOM ====================
+        const app = document.querySelector('.app');
+        const board = document.getElementById('board');
+        const cardModal = document.getElementById('cardModal');
+        const boardTitle = document.getElementById('boardTitle');
+
+        // ==================== LABEL PICKER ====================
+        document.querySelectorAll('.label-option').forEach(label => {
+            label.addEventListener('click', () => {
+                label.classList.toggle('selected');
+                const color = label.dataset.color;
+                if (selectedLabels.includes(color)) {
+                    selectedLabels = selectedLabels.filter(c => c !== color);
+                } else {
+                    selectedLabels.push(color);
+                }
+            });
+        });
+
+        // ==================== THEME ====================
+        function setTheme(theme) {
+            currentTheme = theme;
+            app.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-dot').forEach(dot => {
+                dot.classList.toggle('active', dot.dataset.theme === theme);
+            });
+            saveToLocalStorage();
+        }
+
+        // ==================== RENDER ====================
+        function render() {
+            board.innerHTML = columns.map(column => `
+                <div class="column" data-column-id="${column.id}">
+                    <div class="column-header">
+                        <div class="column-title-wrapper">
+                            <input type="text" class="column-title" value="${escapeHtml(column.title)}" 
+                                   onchange="updateColumnTitle('${column.id}', this.value)">
+                            <span class="column-count">${column.cards.length}</span>
+                        </div>
+                        <button class="column-menu" onclick="deleteColumn('${column.id}')">×</button>
+                    </div>
+                    <div class="column-cards" data-column-id="${column.id}"
+                         ondrop="handleDrop(event, '${column.id}')"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)">
+                        ${column.cards.map(card => renderCard(card, column.id)).join('')}
+                    </div>
+                    <button class="add-card-btn" onclick="openCardModal('${column.id}')">
+                        + Add Card
+                    </button>
+                </div>
+            `).join('') + `
+                <div class="add-column" onclick="addColumn()">
+                    + Add Column
+                </div>
+            `;
+
+            // Add drag listeners to cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function renderCard(card, columnId) {
+            const dueClass = getDueClass(card.due);
+            const dueText = card.due ? formatDate(card.due) : '';
+            
+            return `
+                <div class="card" draggable="true" data-card-id="${card.id}" data-column-id="${columnId}">
+                    ${card.labels.length > 0 ? `
+                        <div class="card-labels">
+                            ${card.labels.map(color => `<div class="card-label" style="background: ${color}"></div>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="card-title">${escapeHtml(card.title)}</div>
+                    ${card.description ? `<div class="card-desc">${escapeHtml(card.description)}</div>` : ''}
+                    <div class="card-footer">
+                        ${dueText ? `<div class="card-due ${dueClass}">📅 ${dueText}</div>` : '<div></div>'}
+                        <div class="card-actions">
+                            <button class="card-action" onclick="event.stopPropagation(); openCardModal('${columnId}', '${card.id}')">✏️</button>
+                            <button class="card-action delete" onclick="event.stopPropagation(); quickDeleteCard('${columnId}', '${card.id}')">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getDueClass(due) {
+            if (!due) return '';
+            const dueDate = new Date(due);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return 'overdue';
+            if (diffDays <= 2) return 'soon';
+            return '';
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // ==================== DRAG & DROP ====================
+        function handleDragStart(e) {
+            draggedCard = e.target.dataset.cardId;
+            draggedFromColumn = e.target.dataset.columnId;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.column-cards').forEach(col => {
+                col.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, targetColumnId) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedCard || !draggedFromColumn) return;
+            
+            // Find and remove card from source column
+            const sourceColumn = columns.find(c => c.id === draggedFromColumn);
+            const cardIndex = sourceColumn.cards.findIndex(c => c.id === draggedCard);
+            const [card] = sourceColumn.cards.splice(cardIndex, 1);
+            
+            // Add to target column
+            const targetColumn = columns.find(c => c.id === targetColumnId);
+            targetColumn.cards.push(card);
+            
+            draggedCard = null;
+            draggedFromColumn = null;
+            
+            render();
+            saveToLocalStorage();
+        }
+
+        // ==================== COLUMNS ====================
+        function addColumn() {
+            const id = 'col_' + Date.now();
+            columns.push({
+                id,
+                title: 'New Column',
+                cards: []
+            });
+            render();
+            saveToLocalStorage();
+            showToast('Column added');
+        }
+
+        function updateColumnTitle(columnId, title) {
+            const column = columns.find(c => c.id === columnId);
+            if (column) {
+                column.title = title;
+                saveToLocalStorage();
+            }
+        }
+
+        function deleteColumn(columnId) {
+            if (columns.length <= 1) {
+                showToast('Cannot delete the last column');
+                return;
+            }
+            const column = columns.find(c => c.id === columnId);
+            if (column.cards.length > 0) {
+                if (!confirm(`Delete "${column.title}" and its ${column.cards.length} card(s)?`)) {
+                    return;
+                }
+            }
+            columns = columns.filter(c => c.id !== columnId);
+            render();
+            saveToLocalStorage();
+            showToast('Column deleted');
+        }
+
+        // ==================== CARDS ====================
+        function openCardModal(columnId, cardId = null) {
+            editingColumnId = columnId;
+            editingCard = cardId;
+            selectedLabels = [];
+            
+            // Reset label picker
+            document.querySelectorAll('.label-option').forEach(l => l.classList.remove('selected'));
+            
+            if (cardId) {
+                const column = columns.find(c => c.id === columnId);
+                const card = column.cards.find(c => c.id === cardId);
+                
+                document.getElementById('modalTitle').textContent = 'Edit Card';
+                document.getElementById('cardTitle').value = card.title;
+                document.getElementById('cardDesc').value = card.description || '';
+                document.getElementById('cardDue').value = card.due || '';
+                document.getElementById('deleteCardBtn').style.display = 'block';
+                
+                selectedLabels = [...card.labels];
+                card.labels.forEach(color => {
+                    const labelEl = document.querySelector(`.label-option[data-color="${color}"]`);
+                    if (labelEl) labelEl.classList.add('selected');
+                });
+            } else {
+                document.getElementById('modalTitle').textContent = 'Add Card';
+                document.getElementById('cardTitle').value = '';
+                document.getElementById('cardDesc').value = '';
+                document.getElementById('cardDue').value = '';
+                document.getElementById('deleteCardBtn').style.display = 'none';
+            }
+            
+            cardModal.classList.add('visible');
+            document.getElementById('cardTitle').focus();
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== cardModal) return;
+            cardModal.classList.remove('visible');
+            editingCard = null;
+            editingColumnId = null;
+        }
+
+        function saveCard() {
+            const title = document.getElementById('cardTitle').value.trim();
+            const description = document.getElementById('cardDesc').value.trim();
+            const due = document.getElementById('cardDue').value;
+            
+            if (!title) {
+                showToast('Please enter a title');
+                return;
+            }
+            
+            const column = columns.find(c => c.id === editingColumnId);
+            
+            if (editingCard) {
+                const card = column.cards.find(c => c.id === editingCard);
+                card.title = title;
+                card.description = description;
+                card.due = due;
+                card.labels = [...selectedLabels];
+                showToast('Card updated');
+            } else {
+                column.cards.push({
+                    id: 'card_' + Date.now(),
+                    title,
+                    description,
+                    due,
+                    labels: [...selectedLabels]
+                });
+                showToast('Card added');
+            }
+            
+            closeModal();
+            render();
+            saveToLocalStorage();
+        }
+
+        function deleteCard() {
+            if (!editingCard || !editingColumnId) return;
+            
+            const column = columns.find(c => c.id === editingColumnId);
+            column.cards = column.cards.filter(c => c.id !== editingCard);
+            
+            closeModal();
+            render();
+            saveToLocalStorage();
+            showToast('Card deleted');
+        }
+
+        function quickDeleteCard(columnId, cardId) {
+            const column = columns.find(c => c.id === columnId);
+            column.cards = column.cards.filter(c => c.id !== cardId);
+            render();
+            saveToLocalStorage();
+            showToast('Card deleted');
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function saveBoard() {
+            const data = {
+                title: boardTitle.value,
+                theme: currentTheme,
+                columns: columns,
+                savedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${boardTitle.value.replace(/[^a-z0-9]/gi, '_')}.done`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Board saved!');
+        }
+
+        function loadBoard() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    boardTitle.value = data.title || 'My Project';
+                    currentTheme = data.theme || 'slate';
+                    columns = data.columns || columns;
+                    
+                    setTheme(currentTheme);
+                    render();
+                    saveToLocalStorage();
+                    showToast('Board loaded!');
+                } catch (err) {
+                    showToast('Error loading file');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                title: boardTitle.value,
+                theme: currentTheme,
+                columns: columns
+            };
+            localStorage.setItem('done-board', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('done-board');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    boardTitle.value = data.title || 'My Project';
+                    currentTheme = data.theme || 'slate';
+                    columns = data.columns || columns;
+                    setTheme(currentTheme);
+                } catch (e) {
+                    console.error('Error loading saved board:', e);
+                }
+            }
+        }
+
+        // ==================== HELPERS ====================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ==================== KEYBOARD ====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        boardTitle.addEventListener('input', saveToLocalStorage);
+
+        // ==================== INIT ====================
+        function init() {
+            loadFromLocalStorage();
+            
+            // Add sample data if empty
+            if (columns.every(c => c.cards.length === 0)) {
+                columns = [
+                    {
+                        id: 'todo',
+                        title: 'To Do',
+                        cards: [
+                            { id: 'card_1', title: 'Research competitors', description: 'Analyze top 5 competitors in the market', due: '', labels: ['#3b82f6'] },
+                            { id: 'card_2', title: 'Design mockups', description: 'Create wireframes for main screens', due: getDateOffset(3), labels: ['#a855f7', '#ec4899'] },
+                            { id: 'card_3', title: 'Write documentation', description: '', due: getDateOffset(7), labels: ['#64748b'] },
+                        ]
+                    },
+                    {
+                        id: 'progress',
+                        title: 'In Progress',
+                        cards: [
+                            { id: 'card_4', title: 'Build landing page', description: 'Implement the hero section and features', due: getDateOffset(1), labels: ['#22c55e'] },
+                            { id: 'card_5', title: 'API integration', description: 'Connect to backend services', due: getDateOffset(-1), labels: ['#f97316'] },
+                        ]
+                    },
+                    {
+                        id: 'done',
+                        title: 'Done',
+                        cards: [
+                            { id: 'card_6', title: 'Project setup', description: 'Initialize repository and dependencies', due: '', labels: ['#22c55e'] },
+                        ]
+                    }
+                ];
+                saveToLocalStorage();
+            }
+            
+            render();
+        }
+
+        function getDateOffset(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

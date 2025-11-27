@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Suite — AI-Friendly Productivity Tools</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #09090b;
+            --bg-surface: #18181b;
+            --bg-elevated: #27272a;
+            --bg-card: #1c1c1f;
+            --bg-card-hover: #252529;
+            
+            --border-color: #27272a;
+            --border-hover: #3f3f46;
+            
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            
+            --accent-slate: #6366f1;
+            --accent-done: #3b82f6;
+            --accent-journey: #f59e0b;
+            --accent-merman: #06b6d4;
+            --accent-metric: #10b981;
+            --accent-pointer: #ec4899;
+            
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            
+            --transition: 200ms ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ==================== BACKGROUND ==================== */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 50%, rgba(236, 72, 153, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(16, 185, 129, 0.08), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ==================== CONTAINER ==================== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            padding: 24px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-slate) 0%, var(--accent-pointer) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .header-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color var(--transition);
+        }
+
+        .header-link:hover {
+            color: var(--text-primary);
+        }
+
+        .github-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--transition);
+        }
+
+        .github-link:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+
+        /* ==================== HERO ==================== */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-metric);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(40px, 8vw, 72px);
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+
+        .hero-features {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .hero-feature-icon {
+            color: var(--accent-metric);
+        }
+
+        /* ==================== APPS GRID ==================== */
+        .apps-section {
+            padding: 40px 0 80px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        /* ==================== APP CARD ==================== */
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            text-decoration: none;
+            color: inherit;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .app-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .app-card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--card-accent);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 24px var(--card-glow);
+        }
+
+        .app-card-arrow {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 16px;
+            transition: all var(--transition);
+        }
+
+        .app-card:hover .app-card-arrow {
+            background: var(--card-accent);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .app-card-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .app-card-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .app-card-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .app-card-feature {
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* Card accent colors */
+        .app-card[data-app="slate"] {
+            --card-accent: var(--accent-slate);
+            --card-glow: rgba(99, 102, 241, 0.2);
+        }
+        .app-card[data-app="done"] {
+            --card-accent: var(--accent-done);
+            --card-glow: rgba(59, 130, 246, 0.2);
+        }
+        .app-card[data-app="journey"] {
+            --card-accent: var(--accent-journey);
+            --card-glow: rgba(245, 158, 11, 0.2);
+        }
+        .app-card[data-app="merman"] {
+            --card-accent: var(--accent-merman);
+            --card-glow: rgba(6, 182, 212, 0.2);
+        }
+        .app-card[data-app="metric"] {
+            --card-accent: var(--accent-metric);
+            --card-glow: rgba(16, 185, 129, 0.2);
+        }
+        .app-card[data-app="pointer"] {
+            --card-accent: var(--accent-pointer);
+            --card-glow: rgba(236, 72, 153, 0.2);
+        }
+
+        /* ==================== FEATURES SECTION ==================== */
+        .features-section {
+            padding: 60px 0;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color var(--transition);
+        }
+
+        .footer-link:hover {
+            color: var(--text-primary);
+        }
+
+        /* ==================== KEYBOARD SHORTCUT ==================== */
+        .keyboard-nav {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .keyboard-nav kbd {
+            background: var(--bg-elevated);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .keyboard-nav-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-color);
+        }
+
+        /* ==================== SELECTION INDICATOR ==================== */
+        .app-card.selected {
+            border-color: var(--card-accent);
+            box-shadow: 0 0 0 2px var(--card-glow);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .header-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 0 40px;
+            }
+
+            .hero-features {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .keyboard-nav {
+                display: none;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* ==================== FOCUS VISIBLE ==================== */
+        *:focus-visible {
+            outline: 2px solid var(--accent-slate);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🧰</div>
+                <span class="logo-text">Work Suite</span>
+            </div>
+            <div class="header-links">
+                <a href="#apps" class="header-link">Apps</a>
+                <a href="#features" class="header-link">Features</a>
+                <a href="README.md" class="header-link" target="_blank">Docs</a>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                <span>6 apps · All offline-ready</span>
+            </div>
+            <h1 class="hero-title">AI-Friendly<br>Productivity Tools</h1>
+            <p class="hero-subtitle">
+                A collection of lightweight, single-file apps that produce simple, text-based outputs. 
+                Perfect for LLM workflows — easy to generate, parse, and transform.
+            </p>
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">✓</span>
+                    <span>Zero dependencies</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">✓</span>
+                    <span>Works offline</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">✓</span>
+                    <span>JSON/Markdown exports</span>
+                </div>
+                <div class="hero-feature">
+                    <span class="hero-feature-icon">✓</span>
+                    <span>LocalStorage persistence</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="apps-section" id="apps">
+            <div class="section-header">
+                <h2 class="section-title">Choose Your Tool</h2>
+                <p class="section-subtitle">Navigate with arrow keys, press Enter to open</p>
+            </div>
+
+            <div class="apps-grid" id="appsGrid">
+                <a href="slate.html" class="app-card" data-app="slate" data-index="0" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">📝</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Slate</h3>
+                    <p class="app-card-description">
+                        Keyboard-first notes app with tile UI. Search, create, and navigate entirely with the keyboard.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Keyboard-first</span>
+                        <span class="app-card-feature">Command palette</span>
+                        <span class="app-card-feature">Auto-save</span>
+                    </div>
+                </a>
+
+                <a href="done.html" class="app-card" data-app="done" data-index="1" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">✅</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Done</h3>
+                    <p class="app-card-description">
+                        Kanban-style task board with drag-and-drop cards, labels, due dates, and multiple themes.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Drag & drop</span>
+                        <span class="app-card-feature">Labels</span>
+                        <span class="app-card-feature">Due dates</span>
+                    </div>
+                </a>
+
+                <a href="journey.html" class="app-card" data-app="journey" data-index="2" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">🛤️</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Journey</h3>
+                    <p class="app-card-description">
+                        Create beautiful visual timelines. Perfect for roadmaps, project histories, and milestones.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Vertical/Horizontal</span>
+                        <span class="app-card-feature">HTML export</span>
+                        <span class="app-card-feature">6 themes</span>
+                    </div>
+                </a>
+
+                <a href="merman.html" class="app-card" data-app="merman" data-index="3" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">🐠</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Merman</h3>
+                    <p class="app-card-description">
+                        Markdown editor with live preview and Mermaid diagram support. Auto-wraps pasted diagrams.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Live preview</span>
+                        <span class="app-card-feature">Mermaid diagrams</span>
+                        <span class="app-card-feature">Syntax highlight</span>
+                    </div>
+                </a>
+
+                <a href="metric.html" class="app-card" data-app="metric" data-index="4" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">📊</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Metric</h3>
+                    <p class="app-card-description">
+                        Lightweight spreadsheet with formulas and charts. Supports SUM, AVG, MIN, MAX, and more.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Formula engine</span>
+                        <span class="app-card-feature">Charts</span>
+                        <span class="app-card-feature">CSV export</span>
+                    </div>
+                </a>
+
+                <a href="pointer.html" class="app-card" data-app="pointer" data-index="5" target="_blank">
+                    <div class="app-card-header">
+                        <div class="app-card-icon">👆</div>
+                        <div class="app-card-arrow">→</div>
+                    </div>
+                    <h3 class="app-card-title">Pointer</h3>
+                    <p class="app-card-description">
+                        Create presentations from Markdown. 8 layouts, 8 themes, and fullscreen presentation mode.
+                    </p>
+                    <div class="app-card-features">
+                        <span class="app-card-feature">Markdown slides</span>
+                        <span class="app-card-feature">8 layouts</span>
+                        <span class="app-card-feature">Present mode</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="features-section" id="features">
+            <div class="section-header">
+                <h2 class="section-title">Built for AI Workflows</h2>
+                <p class="section-subtitle">Simple formats that LLMs can easily read, write, and transform</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">📄</div>
+                    <h3 class="feature-title">Text-Based Formats</h3>
+                    <p class="feature-description">
+                        All outputs are Markdown, JSON, or plain text. No complex binary formats to decode.
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">LLM-Friendly</h3>
+                    <p class="feature-description">
+                        AI can generate content directly. Ask for slides, timelines, or task lists and paste them in.
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Zero Setup</h3>
+                    <p class="feature-description">
+                        Single HTML files with no build step. Open in any browser and start working immediately.
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💾</div>
+                    <h3 class="feature-title">Portable Data</h3>
+                    <p class="feature-description">
+                        Export everything as JSON files. Easy to backup, version control, or transform programmatically.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span>🧰</span>
+                    <span>Work Suite — Simple tools for complex work</span>
+                </div>
+                <div class="footer-links">
+                    <a href="README.md" class="footer-link" target="_blank">Documentation</a>
+                    <a href="#apps" class="footer-link">All Apps</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="keyboard-nav">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> Navigate</span>
+        <div class="keyboard-nav-divider"></div>
+        <span><kbd>Enter</kbd> Open app</span>
+        <div class="keyboard-nav-divider"></div>
+        <span><kbd>1</kbd>-<kbd>6</kbd> Quick access</span>
+    </div>
+
+    <script>
+        // ==================== STATE ====================
+        let selectedIndex = -1;
+        const appCards = document.querySelectorAll('.app-card');
+        const totalApps = appCards.length;
+
+        // ==================== NAVIGATION ====================
+        function selectApp(index) {
+            // Remove previous selection
+            appCards.forEach(card => card.classList.remove('selected'));
+            
+            // Clamp index
+            selectedIndex = Math.max(-1, Math.min(totalApps - 1, index));
+            
+            // Add selection
+            if (selectedIndex >= 0) {
+                appCards[selectedIndex].classList.add('selected');
+                appCards[selectedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        }
+
+        function openSelectedApp() {
+            if (selectedIndex >= 0) {
+                appCards[selectedIndex].click();
+            }
+        }
+
+        function getGridColumns() {
+            const gridStyle = window.getComputedStyle(document.getElementById('appsGrid'));
+            const columns = gridStyle.gridTemplateColumns.split(' ').length;
+            return columns;
+        }
+
+        // ==================== KEYBOARD HANDLER ====================
+        document.addEventListener('keydown', (e) => {
+            // Don't interfere with inputs
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+            const cols = getGridColumns();
+
+            switch (e.key) {
+                case 'ArrowRight':
+                    e.preventDefault();
+                    selectApp(selectedIndex < 0 ? 0 : Math.min(totalApps - 1, selectedIndex + 1));
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    selectApp(selectedIndex <= 0 ? 0 : selectedIndex - 1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (selectedIndex < 0) {
+                        selectApp(0);
+                    } else {
+                        selectApp(Math.min(totalApps - 1, selectedIndex + cols));
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (selectedIndex >= cols) {
+                        selectApp(selectedIndex - cols);
+                    }
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    openSelectedApp();
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                    e.preventDefault();
+                    const num = parseInt(e.key) - 1;
+                    if (num < totalApps) {
+                        selectApp(num);
+                        openSelectedApp();
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    selectApp(-1);
+                    break;
+            }
+        });
+
+        // ==================== HOVER SYNC ====================
+        appCards.forEach((card, index) => {
+            card.addEventListener('mouseenter', () => {
+                selectApp(index);
+            });
+        });
+
+        // ==================== INIT ====================
+        // Subtle entrance animation
+        appCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 + index * 50);
+        });
+    </script>
+</body>
+</html>
+

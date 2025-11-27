@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metric - Data & Calculations</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-app: #0f1419;
+            --bg-surface: #1a1f26;
+            --bg-elevated: #242a33;
+            --bg-cell: #1e252e;
+            --bg-cell-selected: #2a3441;
+            --bg-cell-header: #161b22;
+            --border-color: #2d3640;
+            --border-active: #58a6ff;
+            
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #a371f7;
+            --accent-cyan: #39c5cf;
+            
+            --font-sans: 'DM Sans', 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+            
+            --cell-width: 100px;
+            --cell-height: 28px;
+            --header-height: 28px;
+            --row-header-width: 50px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-app);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: grid;
+            grid-template-rows: 52px 44px 1fr;
+            grid-template-columns: 1fr 380px;
+            height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-cyan) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sheet-name {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 6px;
+            width: 200px;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .sheet-name:hover {
+            background: var(--bg-elevated);
+        }
+
+        .sheet-name:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-elevated);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: var(--bg-cell-selected);
+            border-color: var(--border-active);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-primary:hover {
+            background: #4393e6;
+        }
+
+        /* ==================== FORMULA BAR ==================== */
+        .formula-bar {
+            grid-column: 1 / -1;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+        }
+
+        .cell-reference {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .formula-input {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .formula-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .formula-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .formula-functions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .func-btn {
+            background: var(--bg-cell);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .func-btn:hover {
+            background: var(--bg-elevated);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        /* ==================== SPREADSHEET ==================== */
+        .spreadsheet-container {
+            overflow: auto;
+            background: var(--bg-app);
+            position: relative;
+        }
+
+        .spreadsheet {
+            display: grid;
+            width: fit-content;
+            min-width: 100%;
+        }
+
+        .cell {
+            width: var(--cell-width);
+            height: var(--cell-height);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 12px;
+            background: var(--bg-cell);
+            cursor: cell;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            transition: background 0.1s;
+        }
+
+        .cell:hover {
+            background: var(--bg-cell-selected);
+        }
+
+        .cell.selected {
+            background: var(--bg-cell-selected);
+            outline: 2px solid var(--accent-blue);
+            outline-offset: -2px;
+            z-index: 1;
+        }
+
+        .cell.editing {
+            padding: 0;
+        }
+
+        .cell.editing input {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-surface);
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 0 8px;
+            outline: none;
+        }
+
+        .cell.header {
+            background: var(--bg-cell-header);
+            font-weight: 600;
+            color: var(--text-secondary);
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .cell.header:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+
+        .cell.row-header {
+            width: var(--row-header-width);
+            background: var(--bg-cell-header);
+            font-weight: 500;
+            color: var(--text-muted);
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .cell.corner {
+            background: var(--bg-cell-header);
+            width: var(--row-header-width);
+        }
+
+        .cell.number {
+            justify-content: flex-end;
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        .cell.formula {
+            color: var(--accent-purple);
+        }
+
+        .cell.error {
+            color: var(--accent-red);
+            font-style: italic;
+        }
+
+        /* Selection range highlight */
+        .cell.in-range {
+            background: rgba(88, 166, 255, 0.15);
+        }
+
+        /* ==================== CHARTS PANEL ==================== */
+        .charts-panel {
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-type-selector {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .chart-type-btn {
+            flex: 1;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.15s;
+        }
+
+        .chart-type-btn:hover {
+            background: var(--bg-cell-selected);
+            color: var(--text-primary);
+        }
+
+        .chart-type-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .chart-container {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px;
+        }
+
+        .chart-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .chart-placeholder-text {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .chart-config {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-elevated);
+        }
+
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .config-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .config-input {
+            flex: 1;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .config-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        /* ==================== QUICK STATS ==================== */
+        .quick-stats {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-cell-header);
+        }
+
+        .stats-title {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: var(--bg-surface);
+            border-radius: 6px;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* ==================== CONTEXT MENU ==================== */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            padding: 6px;
+            min-width: 160px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .context-menu.visible {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .context-menu-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .context-menu-item.danger {
+            color: var(--accent-red);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 6px 0;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-top: 8px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .toast.success { border-left: 3px solid var(--accent-green); }
+        .toast.error { border-left: 3px solid var(--accent-red); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-app);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: var(--bg-app);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <span>Metric</span>
+            </div>
+            <div class="header-center">
+                <input type="text" class="sheet-name" id="sheetName" value="Untitled Sheet" placeholder="Sheet name...">
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="clearSheet()">🗑️ Clear</button>
+                <button class="btn" onclick="exportCSV()">📥 CSV</button>
+                <button class="btn" onclick="saveSheet()">💾 Save</button>
+                <button class="btn btn-primary" onclick="loadSheet()">📂 Load</button>
+            </div>
+        </header>
+
+        <div class="formula-bar">
+            <div class="cell-reference" id="cellRef">A1</div>
+            <input type="text" class="formula-input" id="formulaInput" placeholder="Enter value or formula (e.g., =SUM(A1:A10))">
+            <div class="formula-functions">
+                <button class="func-btn" onclick="insertFunction('SUM')" title="Sum of range">SUM</button>
+                <button class="func-btn" onclick="insertFunction('AVG')" title="Average of range">AVG</button>
+                <button class="func-btn" onclick="insertFunction('MIN')" title="Minimum value">MIN</button>
+                <button class="func-btn" onclick="insertFunction('MAX')" title="Maximum value">MAX</button>
+                <button class="func-btn" onclick="insertFunction('COUNT')" title="Count numbers">COUNT</button>
+            </div>
+        </div>
+
+        <div class="spreadsheet-container" id="spreadsheetContainer">
+            <div class="spreadsheet" id="spreadsheet">
+                <!-- Grid rendered by JavaScript -->
+            </div>
+        </div>
+
+        <div class="charts-panel">
+            <div class="panel-header">
+                <span>📈 Visualization</span>
+            </div>
+            <div class="chart-type-selector">
+                <button class="chart-type-btn active" data-type="bar" onclick="setChartType('bar')" title="Bar Chart">📊</button>
+                <button class="chart-type-btn" data-type="line" onclick="setChartType('line')" title="Line Chart">📈</button>
+                <button class="chart-type-btn" data-type="pie" onclick="setChartType('pie')" title="Pie Chart">🥧</button>
+                <button class="chart-type-btn" data-type="doughnut" onclick="setChartType('doughnut')" title="Doughnut">🍩</button>
+            </div>
+            <div class="chart-config">
+                <div class="config-row">
+                    <span class="config-label">Data Range</span>
+                    <input type="text" class="config-input" id="chartDataRange" placeholder="e.g., A1:A10" value="A1:A10">
+                </div>
+                <div class="config-row">
+                    <span class="config-label">Labels</span>
+                    <input type="text" class="config-input" id="chartLabelsRange" placeholder="e.g., B1:B10 (optional)">
+                </div>
+                <div class="config-row">
+                    <button class="btn btn-primary" onclick="updateChart()" style="flex:1;">Update Chart</button>
+                </div>
+            </div>
+            <div class="chart-container" id="chartContainer">
+                <div class="chart-placeholder">
+                    <div class="chart-placeholder-icon">📊</div>
+                    <div class="chart-placeholder-text">
+                        Select a data range and click<br>"Update Chart" to visualize
+                    </div>
+                </div>
+            </div>
+            <div class="quick-stats" id="quickStats">
+                <div class="stats-title">Selection Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statSum">-</div>
+                        <div class="stat-label">Sum</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statAvg">-</div>
+                        <div class="stat-label">Average</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statCount">-</div>
+                        <div class="stat-label">Count</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="cutCell()">✂️ Cut</div>
+        <div class="context-menu-item" onclick="copyCell()">📋 Copy</div>
+        <div class="context-menu-item" onclick="pasteCell()">📥 Paste</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="insertRow()">➕ Insert Row</div>
+        <div class="context-menu-item" onclick="insertColumn()">➕ Insert Column</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" onclick="clearCell()">🗑️ Clear Cell</div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <input type="file" id="fileInput" accept=".json,.metric" style="display:none" onchange="handleFileLoad(event)">
+
+    <script>
+        // ==================== CONFIG ====================
+        const ROWS = 50;
+        const COLS = 26; // A-Z
+        
+        // ==================== STATE ====================
+        let data = {}; // { "A1": { value: "", formula: "" }, ... }
+        let selectedCell = null;
+        let selectedRange = null;
+        let clipboard = null;
+        let currentChart = null;
+        let chartType = 'bar';
+
+        // ==================== DOM ====================
+        const spreadsheet = document.getElementById('spreadsheet');
+        const cellRefDisplay = document.getElementById('cellRef');
+        const formulaInput = document.getElementById('formulaInput');
+        const contextMenu = document.getElementById('contextMenu');
+        const chartContainer = document.getElementById('chartContainer');
+        const sheetName = document.getElementById('sheetName');
+
+        // ==================== HELPERS ====================
+        function colToLetter(col) {
+            return String.fromCharCode(65 + col);
+        }
+
+        function letterToCol(letter) {
+            return letter.charCodeAt(0) - 65;
+        }
+
+        function getCellId(row, col) {
+            return `${colToLetter(col)}${row + 1}`;
+        }
+
+        function parseCellId(cellId) {
+            const match = cellId.match(/^([A-Z]+)(\d+)$/);
+            if (!match) return null;
+            return {
+                col: letterToCol(match[1]),
+                row: parseInt(match[2]) - 1
+            };
+        }
+
+        function parseRange(range) {
+            const parts = range.toUpperCase().split(':');
+            if (parts.length !== 2) return null;
+            const start = parseCellId(parts[0]);
+            const end = parseCellId(parts[1]);
+            if (!start || !end) return null;
+            return { start, end };
+        }
+
+        function getCellsInRange(range) {
+            const parsed = parseRange(range);
+            if (!parsed) return [];
+            
+            const cells = [];
+            const minRow = Math.min(parsed.start.row, parsed.end.row);
+            const maxRow = Math.max(parsed.start.row, parsed.end.row);
+            const minCol = Math.min(parsed.start.col, parsed.end.col);
+            const maxCol = Math.max(parsed.start.col, parsed.end.col);
+            
+            for (let r = minRow; r <= maxRow; r++) {
+                for (let c = minCol; c <= maxCol; c++) {
+                    cells.push(getCellId(r, c));
+                }
+            }
+            return cells;
+        }
+
+        function getNumericValues(range) {
+            const cells = getCellsInRange(range);
+            return cells
+                .map(id => getCellValue(id))
+                .filter(v => typeof v === 'number' && !isNaN(v));
+        }
+
+        // ==================== FORMULA ENGINE ====================
+        const FUNCTIONS = {
+            SUM: (range) => {
+                const values = getNumericValues(range);
+                return values.reduce((a, b) => a + b, 0);
+            },
+            AVG: (range) => {
+                const values = getNumericValues(range);
+                return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+            },
+            AVERAGE: (range) => FUNCTIONS.AVG(range),
+            MIN: (range) => {
+                const values = getNumericValues(range);
+                return values.length ? Math.min(...values) : 0;
+            },
+            MAX: (range) => {
+                const values = getNumericValues(range);
+                return values.length ? Math.max(...values) : 0;
+            },
+            COUNT: (range) => {
+                return getNumericValues(range).length;
+            },
+            COUNTA: (range) => {
+                const cells = getCellsInRange(range);
+                return cells.filter(id => {
+                    const cell = data[id];
+                    return cell && cell.value !== '';
+                }).length;
+            },
+            IF: (condition, trueVal, falseVal) => {
+                return condition ? trueVal : falseVal;
+            },
+            ROUND: (value, decimals = 0) => {
+                return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+            },
+            ABS: (value) => Math.abs(value),
+            SQRT: (value) => Math.sqrt(value),
+            POW: (base, exp) => Math.pow(base, exp),
+        };
+
+        function evaluateFormula(formula) {
+            if (!formula.startsWith('=')) return formula;
+            
+            let expr = formula.substring(1).toUpperCase();
+            
+            // Replace function calls
+            for (const [funcName, func] of Object.entries(FUNCTIONS)) {
+                const regex = new RegExp(`${funcName}\\(([^)]+)\\)`, 'gi');
+                expr = expr.replace(regex, (match, args) => {
+                    try {
+                        // Simple range argument
+                        if (args.includes(':')) {
+                            return func(args.trim());
+                        }
+                        // Multiple arguments
+                        const argList = args.split(',').map(a => {
+                            const trimmed = a.trim();
+                            // Check if it's a cell reference
+                            if (/^[A-Z]+\d+$/.test(trimmed)) {
+                                return getCellValue(trimmed);
+                            }
+                            return parseFloat(trimmed) || trimmed;
+                        });
+                        return func(...argList);
+                    } catch (e) {
+                        return '#ERROR';
+                    }
+                });
+            }
+            
+            // Replace cell references with values
+            expr = expr.replace(/\b([A-Z]+)(\d+)\b/g, (match, col, row) => {
+                const value = getCellValue(match);
+                return typeof value === 'number' ? value : `"${value}"`;
+            });
+            
+            // Evaluate the expression
+            try {
+                // Safe eval using Function constructor
+                const result = new Function(`return ${expr}`)();
+                return typeof result === 'number' ? (Number.isInteger(result) ? result : parseFloat(result.toFixed(10))) : result;
+            } catch (e) {
+                return '#ERROR';
+            }
+        }
+
+        function getCellValue(cellId) {
+            const cell = data[cellId.toUpperCase()];
+            if (!cell) return '';
+            
+            // If cell has a formula, evaluate it
+            if (cell.formula) {
+                return evaluateFormula(cell.formula);
+            }
+            
+            // If cell has no value, return empty string
+            if (cell.value === '' || cell.value === undefined || cell.value === null) {
+                return '';
+            }
+            
+            // Try to parse as number
+            const num = parseFloat(cell.value);
+            return isNaN(num) ? cell.value : num;
+        }
+
+        function getCellDisplay(cellId) {
+            const value = getCellValue(cellId);
+            if (value === '#ERROR') return '#ERROR';
+            if (typeof value === 'number') {
+                return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+            }
+            return value;
+        }
+
+        // ==================== RENDER ====================
+        function renderSpreadsheet() {
+            // Set grid template
+            spreadsheet.style.gridTemplateColumns = `${getComputedStyle(document.documentElement).getPropertyValue('--row-header-width')} repeat(${COLS}, var(--cell-width))`;
+            spreadsheet.style.gridTemplateRows = `var(--header-height) repeat(${ROWS}, var(--cell-height))`;
+            
+            let html = '';
+            
+            // Corner cell
+            html += `<div class="cell corner"></div>`;
+            
+            // Column headers
+            for (let c = 0; c < COLS; c++) {
+                html += `<div class="cell header" data-col="${c}">${colToLetter(c)}</div>`;
+            }
+            
+            // Rows
+            for (let r = 0; r < ROWS; r++) {
+                // Row header
+                html += `<div class="cell row-header" data-row="${r}">${r + 1}</div>`;
+                
+                // Data cells
+                for (let c = 0; c < COLS; c++) {
+                    const cellId = getCellId(r, c);
+                    const cell = data[cellId];
+                    const display = getCellDisplay(cellId);
+                    const isNumber = typeof getCellValue(cellId) === 'number';
+                    const isFormula = cell?.formula;
+                    const isError = display === '#ERROR';
+                    
+                    let classes = 'cell';
+                    if (isNumber && !isError) classes += ' number';
+                    if (isFormula) classes += ' formula';
+                    if (isError) classes += ' error';
+                    if (selectedCell === cellId) classes += ' selected';
+                    
+                    html += `<div class="${classes}" data-cell="${cellId}" data-row="${r}" data-col="${c}">${display}</div>`;
+                }
+            }
+            
+            spreadsheet.innerHTML = html;
+            attachCellListeners();
+        }
+
+        function attachCellListeners() {
+            spreadsheet.querySelectorAll('.cell:not(.header):not(.row-header):not(.corner)').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+                cell.addEventListener('dblclick', handleCellDoubleClick);
+                cell.addEventListener('contextmenu', handleContextMenu);
+            });
+        }
+
+        function updateCell(cellId) {
+            const cellEl = spreadsheet.querySelector(`[data-cell="${cellId}"]`);
+            if (!cellEl) return;
+            
+            const display = getCellDisplay(cellId);
+            const value = getCellValue(cellId);
+            const cell = data[cellId];
+            const isNumber = typeof value === 'number';
+            const isFormula = cell?.formula;
+            const isError = display === '#ERROR';
+            
+            cellEl.textContent = display;
+            cellEl.classList.toggle('number', isNumber && !isError);
+            cellEl.classList.toggle('formula', isFormula);
+            cellEl.classList.toggle('error', isError);
+        }
+
+        // ==================== CELL INTERACTIONS ====================
+        function handleCellClick(e) {
+            const cellId = e.target.dataset.cell;
+            selectCell(cellId);
+        }
+
+        function selectCell(cellId) {
+            // Remove previous selection
+            if (selectedCell) {
+                const prevCell = spreadsheet.querySelector(`[data-cell="${selectedCell}"]`);
+                if (prevCell) prevCell.classList.remove('selected');
+            }
+            
+            selectedCell = cellId;
+            const cellEl = spreadsheet.querySelector(`[data-cell="${cellId}"]`);
+            if (cellEl) cellEl.classList.add('selected');
+            
+            // Update formula bar
+            cellRefDisplay.textContent = cellId;
+            const cell = data[cellId];
+            formulaInput.value = cell?.formula || cell?.value || '';
+            
+            updateQuickStats();
+        }
+
+        function handleCellDoubleClick(e) {
+            const cellEl = e.target;
+            const cellId = cellEl.dataset.cell;
+            enterEditMode(cellEl, cellId);
+        }
+
+        function enterEditMode(cellEl, cellId) {
+            cellEl.classList.add('editing');
+            const cell = data[cellId];
+            const editValue = cell?.formula || cell?.value || '';
+            
+            cellEl.innerHTML = `<input type="text" value="${editValue}" />`;
+            const input = cellEl.querySelector('input');
+            input.focus();
+            input.select();
+            
+            input.addEventListener('blur', () => exitEditMode(cellEl, cellId, input.value));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    exitEditMode(cellEl, cellId, input.value);
+                    // Move to next row
+                    const parsed = parseCellId(cellId);
+                    if (parsed && parsed.row < ROWS - 1) {
+                        selectCell(getCellId(parsed.row + 1, parsed.col));
+                    }
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    exitEditMode(cellEl, cellId, input.value);
+                    // Move to next column
+                    const parsed = parseCellId(cellId);
+                    if (parsed && parsed.col < COLS - 1) {
+                        selectCell(getCellId(parsed.row, parsed.col + 1));
+                    }
+                } else if (e.key === 'Escape') {
+                    exitEditMode(cellEl, cellId, cell?.formula || cell?.value || '');
+                }
+            });
+        }
+
+        function exitEditMode(cellEl, cellId, value) {
+            cellEl.classList.remove('editing');
+            
+            // Store the value
+            if (value.startsWith('=')) {
+                data[cellId] = { value: '', formula: value };
+            } else {
+                data[cellId] = { value: value, formula: '' };
+            }
+            
+            // Update display
+            updateCell(cellId);
+            
+            // Update formula bar
+            const cell = data[cellId];
+            formulaInput.value = cell?.formula || cell?.value || '';
+            
+            // Recalculate dependent cells (simplified - just re-render all)
+            renderSpreadsheet();
+            selectCell(cellId);
+            
+            saveToLocalStorage();
+        }
+
+        function handleContextMenu(e) {
+            e.preventDefault();
+            const cellId = e.target.dataset.cell;
+            if (cellId) selectCell(cellId);
+            
+            contextMenu.style.left = e.pageX + 'px';
+            contextMenu.style.top = e.pageY + 'px';
+            contextMenu.classList.add('visible');
+        }
+
+        // ==================== FORMULA BAR ====================
+        formulaInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && selectedCell) {
+                const value = formulaInput.value;
+                if (value.startsWith('=')) {
+                    data[selectedCell] = { value: '', formula: value };
+                } else {
+                    data[selectedCell] = { value: value, formula: '' };
+                }
+                updateCell(selectedCell);
+                renderSpreadsheet();
+                selectCell(selectedCell);
+                saveToLocalStorage();
+            }
+        });
+
+        function insertFunction(funcName) {
+            formulaInput.value = `=${funcName}(A1:A10)`;
+            formulaInput.focus();
+            formulaInput.setSelectionRange(funcName.length + 2, funcName.length + 9);
+        }
+
+        // ==================== QUICK STATS ====================
+        function updateQuickStats() {
+            const statSum = document.getElementById('statSum');
+            const statAvg = document.getElementById('statAvg');
+            const statCount = document.getElementById('statCount');
+            
+            // Get selected range or single cell
+            let values = [];
+            if (selectedCell) {
+                const value = getCellValue(selectedCell);
+                if (typeof value === 'number') values = [value];
+            }
+            
+            // Check for data range input
+            const rangeInput = document.getElementById('chartDataRange').value;
+            if (rangeInput) {
+                const rangeValues = getNumericValues(rangeInput);
+                if (rangeValues.length > values.length) {
+                    values = rangeValues;
+                }
+            }
+            
+            if (values.length === 0) {
+                statSum.textContent = '-';
+                statAvg.textContent = '-';
+                statCount.textContent = '-';
+                return;
+            }
+            
+            const sum = values.reduce((a, b) => a + b, 0);
+            const avg = sum / values.length;
+            
+            statSum.textContent = formatNumber(sum);
+            statAvg.textContent = formatNumber(avg);
+            statCount.textContent = values.length;
+        }
+
+        function formatNumber(num) {
+            if (Math.abs(num) >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (Math.abs(num) >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            } else if (Number.isInteger(num)) {
+                return num.toString();
+            } else {
+                return num.toFixed(2);
+            }
+        }
+
+        // ==================== CLIPBOARD ====================
+        function cutCell() {
+            if (!selectedCell) return;
+            clipboard = { ...data[selectedCell], cellId: selectedCell, cut: true };
+            hideContextMenu();
+            showToast('Cell cut to clipboard');
+        }
+
+        function copyCell() {
+            if (!selectedCell) return;
+            clipboard = { ...data[selectedCell], cellId: selectedCell, cut: false };
+            hideContextMenu();
+            showToast('Cell copied to clipboard');
+        }
+
+        function pasteCell() {
+            if (!selectedCell || !clipboard) return;
+            
+            data[selectedCell] = { 
+                value: clipboard.value || '', 
+                formula: clipboard.formula || '' 
+            };
+            
+            if (clipboard.cut) {
+                delete data[clipboard.cellId];
+                clipboard = null;
+            }
+            
+            renderSpreadsheet();
+            selectCell(selectedCell);
+            hideContextMenu();
+            saveToLocalStorage();
+            showToast('Pasted');
+        }
+
+        function clearCell() {
+            if (!selectedCell) return;
+            delete data[selectedCell];
+            renderSpreadsheet();
+            selectCell(selectedCell);
+            hideContextMenu();
+            saveToLocalStorage();
+        }
+
+        function insertRow() {
+            // Simplified: just show toast
+            hideContextMenu();
+            showToast('Row operations coming soon');
+        }
+
+        function insertColumn() {
+            hideContextMenu();
+            showToast('Column operations coming soon');
+        }
+
+        function hideContextMenu() {
+            contextMenu.classList.remove('visible');
+        }
+
+        // ==================== CHARTS ====================
+        function setChartType(type) {
+            chartType = type;
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            updateChart();
+        }
+
+        function updateChart() {
+            const dataRange = document.getElementById('chartDataRange').value;
+            const labelsRange = document.getElementById('chartLabelsRange').value;
+            
+            if (!dataRange) {
+                showToast('Please enter a data range', 'error');
+                return;
+            }
+            
+            const values = getNumericValues(dataRange);
+            if (values.length === 0) {
+                showToast('No numeric data found in range', 'error');
+                return;
+            }
+            
+            let labels = [];
+            if (labelsRange) {
+                const labelCells = getCellsInRange(labelsRange);
+                labels = labelCells.map(id => {
+                    const v = getCellValue(id);
+                    return v !== '' ? String(v) : id;
+                });
+            } else {
+                labels = values.map((_, i) => `Item ${i + 1}`);
+            }
+            
+            // Match labels to values
+            while (labels.length < values.length) {
+                labels.push(`Item ${labels.length + 1}`);
+            }
+            labels = labels.slice(0, values.length);
+            
+            // Create or update chart
+            chartContainer.innerHTML = '<canvas id="chart"></canvas>';
+            const ctx = document.getElementById('chart').getContext('2d');
+            
+            const colors = [
+                'rgba(88, 166, 255, 0.8)',
+                'rgba(63, 185, 80, 0.8)',
+                'rgba(210, 153, 34, 0.8)',
+                'rgba(248, 81, 73, 0.8)',
+                'rgba(163, 113, 247, 0.8)',
+                'rgba(57, 197, 207, 0.8)',
+                'rgba(255, 123, 114, 0.8)',
+                'rgba(110, 198, 141, 0.8)',
+            ];
+            
+            const borderColors = colors.map(c => c.replace('0.8', '1'));
+            
+            const chartColors = values.map((_, i) => colors[i % colors.length]);
+            const chartBorders = values.map((_, i) => borderColors[i % borderColors.length]);
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Data',
+                        data: values,
+                        backgroundColor: chartType === 'line' ? 'rgba(88, 166, 255, 0.2)' : chartColors,
+                        borderColor: chartType === 'line' ? 'rgba(88, 166, 255, 1)' : chartBorders,
+                        borderWidth: chartType === 'line' ? 2 : 1,
+                        tension: 0.3,
+                        fill: chartType === 'line'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: chartType === 'pie' || chartType === 'doughnut',
+                            position: 'bottom',
+                            labels: {
+                                color: '#8b949e',
+                                font: { family: 'DM Sans' }
+                            }
+                        }
+                    },
+                    scales: chartType === 'pie' || chartType === 'doughnut' ? {} : {
+                        x: {
+                            grid: { color: '#2d3640' },
+                            ticks: { color: '#8b949e' }
+                        },
+                        y: {
+                            grid: { color: '#2d3640' },
+                            ticks: { color: '#8b949e' }
+                        }
+                    }
+                }
+            });
+            
+            updateQuickStats();
+        }
+
+        // ==================== FILE OPERATIONS ====================
+        function saveSheet() {
+            const sheet = {
+                name: sheetName.value,
+                data: data,
+                savedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(sheet, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${sheetName.value.replace(/[^a-z0-9]/gi, '_')}.metric`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Sheet saved!', 'success');
+        }
+
+        function loadSheet() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const sheet = JSON.parse(e.target.result);
+                    sheetName.value = sheet.name || 'Untitled Sheet';
+                    data = sheet.data || {};
+                    renderSpreadsheet();
+                    showToast('Sheet loaded!', 'success');
+                    saveToLocalStorage();
+                } catch (err) {
+                    showToast('Error loading file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function exportCSV() {
+            let csv = '';
+            
+            // Find data bounds
+            let maxRow = 0, maxCol = 0;
+            for (const cellId of Object.keys(data)) {
+                const parsed = parseCellId(cellId);
+                if (parsed) {
+                    maxRow = Math.max(maxRow, parsed.row);
+                    maxCol = Math.max(maxCol, parsed.col);
+                }
+            }
+            
+            // Build CSV
+            for (let r = 0; r <= maxRow; r++) {
+                const row = [];
+                for (let c = 0; c <= maxCol; c++) {
+                    const cellId = getCellId(r, c);
+                    const value = getCellValue(cellId);
+                    // Escape quotes and wrap in quotes if needed
+                    const strVal = String(value);
+                    if (strVal.includes(',') || strVal.includes('"') || strVal.includes('\n')) {
+                        row.push(`"${strVal.replace(/"/g, '""')}"`);
+                    } else {
+                        row.push(strVal);
+                    }
+                }
+                csv += row.join(',') + '\n';
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${sheetName.value.replace(/[^a-z0-9]/gi, '_')}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV exported!', 'success');
+        }
+
+        function clearSheet() {
+            if (confirm('Clear all data? This cannot be undone.')) {
+                data = {};
+                renderSpreadsheet();
+                saveToLocalStorage();
+                showToast('Sheet cleared');
+            }
+        }
+
+        function saveToLocalStorage() {
+            const sheet = {
+                name: sheetName.value,
+                data: data
+            };
+            localStorage.setItem('metric-sheet', JSON.stringify(sheet));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('metric-sheet');
+            if (saved) {
+                try {
+                    const sheet = JSON.parse(saved);
+                    sheetName.value = sheet.name || 'Untitled Sheet';
+                    data = sheet.data || {};
+                } catch (e) {
+                    console.error('Error loading saved sheet:', e);
+                }
+            }
+        }
+
+        // ==================== KEYBOARD NAVIGATION ====================
+        document.addEventListener('keydown', (e) => {
+            if (!selectedCell) return;
+            if (e.target.tagName === 'INPUT') return;
+            
+            const parsed = parseCellId(selectedCell);
+            if (!parsed) return;
+            
+            let newRow = parsed.row;
+            let newCol = parsed.col;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    newRow = Math.max(0, newRow - 1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    newRow = Math.min(ROWS - 1, newRow + 1);
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    newCol = Math.max(0, newCol - 1);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    newCol = Math.min(COLS - 1, newCol + 1);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    const cellEl = spreadsheet.querySelector(`[data-cell="${selectedCell}"]`);
+                    if (cellEl) enterEditMode(cellEl, selectedCell);
+                    return;
+                case 'Delete':
+                case 'Backspace':
+                    if (!e.target.closest('.cell.editing')) {
+                        e.preventDefault();
+                        clearCell();
+                    }
+                    return;
+                default:
+                    // Start typing to edit
+                    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                        const cellEl = spreadsheet.querySelector(`[data-cell="${selectedCell}"]`);
+                        if (cellEl) {
+                            enterEditMode(cellEl, selectedCell);
+                            // Clear and type the character
+                            setTimeout(() => {
+                                const input = cellEl.querySelector('input');
+                                if (input) {
+                                    input.value = e.key;
+                                    input.setSelectionRange(1, 1);
+                                }
+                            }, 0);
+                        }
+                    }
+                    return;
+            }
+            
+            selectCell(getCellId(newRow, newCol));
+            
+            // Scroll into view
+            const cellEl = spreadsheet.querySelector(`[data-cell="${selectedCell}"]`);
+            if (cellEl) cellEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✓' : '⚠'}</span> ${message}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.context-menu')) {
+                hideContextMenu();
+            }
+        });
+
+        sheetName.addEventListener('input', saveToLocalStorage);
+
+        // Data range input triggers stats update
+        document.getElementById('chartDataRange').addEventListener('input', updateQuickStats);
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadFromLocalStorage();
+            renderSpreadsheet();
+            selectCell('A1');
+            
+            // Add some sample data if empty
+            if (Object.keys(data).length === 0) {
+                data = {
+                    'A1': { value: 'Month', formula: '' },
+                    'B1': { value: 'Sales', formula: '' },
+                    'C1': { value: 'Expenses', formula: '' },
+                    'D1': { value: 'Profit', formula: '' },
+                    'A2': { value: 'Jan', formula: '' },
+                    'A3': { value: 'Feb', formula: '' },
+                    'A4': { value: 'Mar', formula: '' },
+                    'A5': { value: 'Apr', formula: '' },
+                    'A6': { value: 'May', formula: '' },
+                    'A7': { value: 'Jun', formula: '' },
+                    'B2': { value: '1200', formula: '' },
+                    'B3': { value: '1450', formula: '' },
+                    'B4': { value: '1320', formula: '' },
+                    'B5': { value: '1580', formula: '' },
+                    'B6': { value: '1750', formula: '' },
+                    'B7': { value: '1890', formula: '' },
+                    'C2': { value: '800', formula: '' },
+                    'C3': { value: '920', formula: '' },
+                    'C4': { value: '780', formula: '' },
+                    'C5': { value: '1050', formula: '' },
+                    'C6': { value: '1100', formula: '' },
+                    'C7': { value: '1200', formula: '' },
+                    'D2': { value: '', formula: '=B2-C2' },
+                    'D3': { value: '', formula: '=B3-C3' },
+                    'D4': { value: '', formula: '=B4-C4' },
+                    'D5': { value: '', formula: '=B5-C5' },
+                    'D6': { value: '', formula: '=B6-C6' },
+                    'D7': { value: '', formula: '=B7-C7' },
+                    'A9': { value: 'Total:', formula: '' },
+                    'B9': { value: '', formula: '=SUM(B2:B7)' },
+                    'C9': { value: '', formula: '=SUM(C2:C7)' },
+                    'D9': { value: '', formula: '=SUM(D2:D7)' },
+                    'A10': { value: 'Average:', formula: '' },
+                    'B10': { value: '', formula: '=AVG(B2:B7)' },
+                    'C10': { value: '', formula: '=AVG(C2:C7)' },
+                    'D10': { value: '', formula: '=AVG(D2:D7)' },
+                };
+                saveToLocalStorage();
+                renderSpreadsheet();
+                selectCell('A1');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

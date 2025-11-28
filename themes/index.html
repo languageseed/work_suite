@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Suite Content Themes</title>
+    
+    <!-- Base fonts for app chrome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Content theme fonts (will be dynamically loaded) -->
+    <link id="theme-fonts" rel="stylesheet" href="">
+    
+    <!-- Content styles -->
+    <link rel="stylesheet" href="content-styles.css">
+    
+    <style>
+        :root {
+            --app-bg: #0a0a0f;
+            --app-surface: #12121a;
+            --app-border: #2a2a3a;
+            --app-text: #e8e8ed;
+            --app-muted: #6a6a7a;
+            --app-accent: #6366f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--app-bg);
+            color: var(--app-text);
+            min-height: 100vh;
+        }
+
+        /* ==================== LAYOUT ==================== */
+        .app {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            background: var(--app-surface);
+            border-right: 1px solid var(--app-border);
+            padding: 24px;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 13px;
+            color: var(--app-muted);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--app-muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 16px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--app-accent);
+        }
+
+        .theme-section {
+            margin-bottom: 24px;
+        }
+
+        .theme-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--app-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .theme-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .theme-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .theme-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .theme-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--app-accent);
+        }
+
+        .theme-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .theme-item-desc {
+            font-size: 11px;
+            color: var(--app-muted);
+        }
+
+        .theme-item-colors {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .theme-color-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==================== MAIN ==================== */
+        .main {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .main-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .main-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            color: var(--app-text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            border-color: var(--app-accent);
+        }
+
+        .btn-primary {
+            background: var(--app-accent);
+            border-color: var(--app-accent);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* ==================== PREVIEW ==================== */
+        .preview-container {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--app-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preview-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--app-border);
+        }
+
+        .preview-dot.red { background: #ff5f56; }
+        .preview-dot.yellow { background: #ffbd2e; }
+        .preview-dot.green { background: #27c93f; }
+
+        .preview-content {
+            padding: 48px;
+            min-height: 500px;
+            transition: all 0.3s;
+        }
+
+        /* ==================== CODE DISPLAY ==================== */
+        .code-section {
+            background: var(--app-surface);
+            border: 1px solid var(--app-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--app-border);
+            font-size: 12px;
+            color: var(--app-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .code-content {
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+            background: #0d0d12;
+        }
+
+        .code-content code {
+            color: #a5b4fc;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--app-border);
+            }
+
+            .theme-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .theme-item {
+                flex: 1;
+                min-width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="../index.html" class="back-link">← Back to Work Suite</a>
+            
+            <div class="sidebar-header">
+                <div class="sidebar-title">🎨 Content Themes</div>
+                <div class="sidebar-subtitle">Preview and select themes for your content</div>
+            </div>
+
+            <div class="theme-section">
+                <div class="theme-section-title">Dark Themes</div>
+                <div class="theme-list" id="darkThemes"></div>
+            </div>
+
+            <div class="theme-section">
+                <div class="theme-section-title">Light Themes</div>
+                <div class="theme-list" id="lightThemes"></div>
+            </div>
+
+            <div class="theme-section">
+                <div class="theme-section-title">Special</div>
+                <div class="theme-list" id="specialThemes"></div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="main-header">
+                <h1 class="main-title">Theme Preview</h1>
+                <div class="main-actions">
+                    <button class="btn" onclick="copyCSS()">📋 Copy CSS Variables</button>
+                    <button class="btn btn-primary" onclick="saveTheme()">💾 Set as Default</button>
+                </div>
+            </div>
+
+            <div class="preview-container">
+                <div class="preview-header">
+                    <div class="preview-dot red"></div>
+                    <div class="preview-dot yellow"></div>
+                    <div class="preview-dot green"></div>
+                </div>
+                <div class="preview-content ws-content" id="previewContent">
+                    <!-- Sample content rendered here -->
+                </div>
+            </div>
+
+            <div class="code-section">
+                <div class="code-header">
+                    <span>CSS Variables</span>
+                    <button class="btn" onclick="copyCSS()" style="padding: 4px 12px; font-size: 11px;">Copy</button>
+                </div>
+                <div class="code-content">
+                    <code id="cssOutput"></code>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="content-themes.js"></script>
+    <script>
+        // ==================== STATE ====================
+        let currentTheme = 'midnight';
+
+        // ==================== SAMPLE CONTENT ====================
+        const sampleContent = `
+            <h1>The Art of Clear Thinking</h1>
+            <p>Good writing is <strong>clear thinking</strong> made visible. When we struggle to express ideas, it often reveals that we haven't fully understood them ourselves.</p>
+            
+            <h2>Core Principles</h2>
+            <p>Here are the fundamental principles that guide effective communication:</p>
+            <ul>
+                <li><strong>Simplicity</strong> — Remove unnecessary complexity</li>
+                <li><strong>Clarity</strong> — Say exactly what you mean</li>
+                <li><strong>Structure</strong> — Organize ideas logically</li>
+            </ul>
+            
+            <blockquote>
+                <p>"The most valuable of all talents is that of never using two words when one will do."</p>
+                <cite>Thomas Jefferson</cite>
+            </blockquote>
+            
+            <h3>Code Example</h3>
+            <p>Here's how you might implement a simple function:</p>
+            <pre><code>function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+
+console.log(greet('World'));</code></pre>
+            
+            <h3>Comparison Table</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Good Writing</th>
+                        <th>Poor Writing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Length</td>
+                        <td>Concise</td>
+                        <td>Verbose</td>
+                    </tr>
+                    <tr>
+                        <td>Structure</td>
+                        <td>Organized</td>
+                        <td>Scattered</td>
+                    </tr>
+                    <tr>
+                        <td>Language</td>
+                        <td>Simple</td>
+                        <td>Complex</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <hr>
+            
+            <p>Remember: <mark>clarity trumps cleverness</mark>. Your goal is to be understood, not to impress.</p>
+            
+            <p><small>Last updated: November 2024</small></p>
+        `;
+
+        // ==================== RENDER ====================
+        function renderThemeList() {
+            const darkThemes = document.getElementById('darkThemes');
+            const lightThemes = document.getElementById('lightThemes');
+            const specialThemes = document.getElementById('specialThemes');
+
+            darkThemes.innerHTML = '';
+            lightThemes.innerHTML = '';
+            specialThemes.innerHTML = '';
+
+            WorkSuiteThemes.getThemes().forEach(theme => {
+                const item = createThemeItem(theme);
+                
+                if (theme.id === 'typewriter' || theme.id === 'terminal') {
+                    specialThemes.appendChild(item);
+                } else if (theme.category === 'dark') {
+                    darkThemes.appendChild(item);
+                } else {
+                    lightThemes.appendChild(item);
+                }
+            });
+        }
+
+        function createThemeItem(theme) {
+            const item = document.createElement('div');
+            item.className = `theme-item ${theme.id === currentTheme ? 'active' : ''}`;
+            item.onclick = () => selectTheme(theme.id);
+
+            item.innerHTML = `
+                <div class="theme-item-name">${theme.name}</div>
+                <div class="theme-item-desc">${theme.description}</div>
+                <div class="theme-item-colors">
+                    <div class="theme-color-dot" style="background: ${theme.colors.backgroundSolid}"></div>
+                    <div class="theme-color-dot" style="background: ${theme.colors.heading}"></div>
+                    <div class="theme-color-dot" style="background: ${theme.colors.accent}"></div>
+                    <div class="theme-color-dot" style="background: ${theme.colors.text}"></div>
+                </div>
+            `;
+
+            return item;
+        }
+
+        function renderPreview() {
+            const preview = document.getElementById('previewContent');
+            preview.innerHTML = sampleContent;
+        }
+
+        function renderCSS() {
+            const output = document.getElementById('cssOutput');
+            const theme = WorkSuiteThemes.getTheme(currentTheme);
+            const css = WorkSuiteThemes.generateCSSVariables(theme);
+            
+            // Format for display
+            const formatted = css
+                .trim()
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .join('\n');
+            
+            output.textContent = formatted;
+        }
+
+        // ==================== ACTIONS ====================
+        function selectTheme(themeId) {
+            currentTheme = themeId;
+            
+            // Update UI
+            document.querySelectorAll('.theme-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Apply theme
+            const preview = document.getElementById('previewContent');
+            WorkSuiteThemes.loadFonts(themeId);
+            WorkSuiteThemes.apply(themeId, preview);
+
+            // Update CSS output
+            renderCSS();
+        }
+
+        function copyCSS() {
+            const theme = WorkSuiteThemes.getTheme(currentTheme);
+            const css = WorkSuiteThemes.generateCSSVariables(theme);
+            
+            navigator.clipboard.writeText(css.trim()).then(() => {
+                alert('CSS variables copied to clipboard!');
+            });
+        }
+
+        function saveTheme() {
+            WorkSuiteThemes.savePreference(currentTheme);
+            alert(`"${WorkSuiteThemes.getTheme(currentTheme).name}" set as your default content theme!`);
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            // Load saved preference
+            currentTheme = WorkSuiteThemes.loadPreference();
+            
+            renderThemeList();
+            renderPreview();
+            renderCSS();
+
+            // Apply initial theme
+            const preview = document.getElementById('previewContent');
+            WorkSuiteThemes.loadFonts(currentTheme);
+            WorkSuiteThemes.apply(currentTheme, preview);
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

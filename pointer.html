@@ -18,6 +18,9 @@
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     
+    <!-- Work Suite Content Themes -->
+    <script src="themes/content-themes.js"></script>
+    
     <style>
         :root {
             /* App Chrome */
@@ -932,7 +935,7 @@
         <main class="main-area">
             <div class="slide-preview-container">
                 <div class="slide-preview" id="slidePreview">
-                    <div class="slide-content" id="slideContent" data-layout="title">
+                    <div class="slide-content ws-content" id="slideContent" data-layout="title">
                         <!-- Slide content rendered here -->
                     </div>
                     <div class="slide-number" id="slideNumber">1 / 1</div>
@@ -1029,16 +1032,9 @@
             </div>
 
             <div class="settings-section">
-                <div class="settings-section-title">Deck Theme</div>
+                <div class="settings-section-title">Content Theme</div>
                 <div class="theme-grid" id="themeGrid">
-                    <div class="theme-option theme-midnight active" data-theme="midnight" data-name="Midnight" onclick="setTheme('midnight')"></div>
-                    <div class="theme-option theme-aurora" data-theme="aurora" data-name="Aurora" onclick="setTheme('aurora')"></div>
-                    <div class="theme-option theme-sunset" data-theme="sunset" data-name="Sunset" onclick="setTheme('sunset')"></div>
-                    <div class="theme-option theme-ocean" data-theme="ocean" data-name="Ocean" onclick="setTheme('ocean')"></div>
-                    <div class="theme-option theme-forest" data-theme="forest" data-name="Forest" onclick="setTheme('forest')"></div>
-                    <div class="theme-option theme-minimal" data-theme="minimal" data-name="Minimal" onclick="setTheme('minimal')"></div>
-                    <div class="theme-option theme-paper" data-theme="paper" data-name="Paper" onclick="setTheme('paper')"></div>
-                    <div class="theme-option theme-neon" data-theme="neon" data-name="Neon" onclick="setTheme('neon')"></div>
+                    <!-- Themes rendered by JavaScript -->
                 </div>
             </div>
 
@@ -1057,7 +1053,7 @@
     <!-- Presentation Mode Overlay -->
     <div class="presentation-mode" id="presentationMode">
         <div class="slide-preview" id="presentationSlide">
-            <div class="slide-content" id="presentationContent" data-layout="title"></div>
+            <div class="slide-content ws-content" id="presentationContent" data-layout="title"></div>
             <div class="slide-number" id="presentationNumber">1 / 1</div>
         </div>
         <div class="presentation-controls">
@@ -1241,14 +1237,36 @@
 
         function setTheme(theme) {
             currentTheme = theme;
-            app.setAttribute('data-theme', theme);
-            presentationMode.querySelector('.slide-preview')?.setAttribute('data-theme', theme);
             
+            // Apply shared content theme
+            if (typeof WorkSuiteThemes !== 'undefined') {
+                WorkSuiteThemes.loadFonts(theme);
+                WorkSuiteThemes.apply(theme, slideContent);
+                WorkSuiteThemes.apply(theme, presentationContent);
+            }
+            
+            // Update theme grid selection
             document.querySelectorAll('.theme-option').forEach(opt => {
                 opt.classList.toggle('active', opt.dataset.theme === theme);
             });
             
             saveToLocalStorage();
+        }
+
+        function renderThemeGrid() {
+            if (typeof WorkSuiteThemes === 'undefined') return;
+            
+            const themeGrid = document.getElementById('themeGrid');
+            const themes = WorkSuiteThemes.getThemes();
+            
+            themeGrid.innerHTML = themes.map(theme => `
+                <div class="theme-option ${theme.id === currentTheme ? 'active' : ''}" 
+                     data-theme="${theme.id}" 
+                     data-name="${theme.name}"
+                     onclick="setTheme('${theme.id}')"
+                     style="background: ${theme.colors.background}; color: ${theme.colors.heading};">
+                </div>
+            `).join('');
         }
 
         // ==================== NAVIGATION ====================
@@ -1474,6 +1492,17 @@
         // ==================== INITIALIZATION ====================
         function init() {
             loadFromLocalStorage();
+            
+            // Initialize content themes
+            renderThemeGrid();
+            if (typeof WorkSuiteThemes !== 'undefined') {
+                // Use shared preference if no local theme saved
+                if (!currentTheme || currentTheme === 'midnight') {
+                    currentTheme = WorkSuiteThemes.loadPreference();
+                }
+                setTheme(currentTheme);
+            }
+            
             renderSlidesList();
             renderCurrentSlide();
         }

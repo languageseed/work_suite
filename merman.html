@@ -36,6 +36,9 @@
         window.initMermaid = initMermaid;
     </script>
     
+    <!-- Work Suite Content Themes -->
+    <script src="themes/content-themes.js"></script>
+    
     <style>
         :root {
             /* Typography */
@@ -228,6 +231,86 @@
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.4);
             transform: rotate(15deg);
+        }
+
+        /* Content Theme Picker */
+        .content-theme-picker {
+            position: relative;
+        }
+
+        .content-theme-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            max-height: 320px;
+            overflow-y: auto;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s;
+        }
+
+        .content-theme-dropdown.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .content-theme-dropdown-header {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .content-theme-list {
+            padding: 8px;
+        }
+
+        .content-theme-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s;
+        }
+
+        .content-theme-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .content-theme-item.active {
+            background: var(--bg-primary);
+            color: white;
+        }
+
+        .content-theme-item-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .content-theme-item-colors {
+            display: flex;
+            gap: 3px;
+        }
+
+        .content-theme-item-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.1);
         }
 
         /* Toolbar */
@@ -781,6 +864,15 @@
                 </div>
             </div>
             <div class="header-actions">
+                <div class="content-theme-picker">
+                    <button class="header-btn" onclick="toggleContentThemePicker()" title="Content Theme" aria-label="Content Theme">
+                        <span>🎨</span> <span>Theme</span>
+                    </button>
+                    <div class="content-theme-dropdown" id="contentThemeDropdown">
+                        <div class="content-theme-dropdown-header">Content Theme</div>
+                        <div class="content-theme-list" id="contentThemeList"></div>
+                    </div>
+                </div>
                 <button class="header-btn" onclick="exportMarkdown()" title="Download as .md file" aria-label="Download Markdown">
                     <span>💾</span> <span>Save</span>
                 </button>
@@ -869,7 +961,7 @@ Drag & drop .md files to open them!"
                 <div class="pane-header">
                     <span class="pane-header-icon">👁️</span> Preview
                 </div>
-                <div id="preview" aria-live="polite"></div>
+                <div id="preview" class="ws-content" aria-live="polite"></div>
             </div>
         </div>
     </div>
@@ -1379,10 +1471,72 @@ ${preview.innerHTML}
         // Update preview on input
         editor.addEventListener('input', triggerUpdate);
         
+        // ==================== Content Themes ====================
+        let currentContentTheme = 'midnight';
+        const contentThemeDropdown = document.getElementById('contentThemeDropdown');
+        const contentThemeList = document.getElementById('contentThemeList');
+
+        function initContentThemes() {
+            if (typeof WorkSuiteThemes === 'undefined') {
+                console.warn('WorkSuiteThemes not loaded');
+                return;
+            }
+
+            // Load saved preference
+            currentContentTheme = WorkSuiteThemes.loadPreference();
+            
+            // Load fonts and apply theme to preview
+            WorkSuiteThemes.loadFonts(currentContentTheme);
+            WorkSuiteThemes.apply(currentContentTheme, preview);
+
+            // Render theme list
+            renderContentThemeList();
+        }
+
+        function renderContentThemeList() {
+            if (typeof WorkSuiteThemes === 'undefined') return;
+
+            const themes = WorkSuiteThemes.getThemes();
+            contentThemeList.innerHTML = themes.map(theme => `
+                <div class="content-theme-item ${theme.id === currentContentTheme ? 'active' : ''}" 
+                     onclick="selectContentTheme('${theme.id}')">
+                    <span class="content-theme-item-name">${theme.name}</span>
+                    <div class="content-theme-item-colors">
+                        <div class="content-theme-item-color" style="background: ${theme.colors.backgroundSolid}"></div>
+                        <div class="content-theme-item-color" style="background: ${theme.colors.heading}"></div>
+                        <div class="content-theme-item-color" style="background: ${theme.colors.accent}"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleContentThemePicker() {
+            contentThemeDropdown.classList.toggle('visible');
+        }
+
+        function selectContentTheme(themeId) {
+            currentContentTheme = themeId;
+            WorkSuiteThemes.loadFonts(themeId);
+            WorkSuiteThemes.apply(themeId, preview);
+            renderContentThemeList();
+            contentThemeDropdown.classList.remove('visible');
+            showToast(`Theme: ${WorkSuiteThemes.getTheme(themeId).name}`, 'info');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.content-theme-picker')) {
+                contentThemeDropdown.classList.remove('visible');
+            }
+        });
+
         // ==================== Initialize ====================
         window.addEventListener('load', () => {
-            // Load theme
+            // Load app theme
             initTheme();
+            
+            // Load content theme
+            initContentThemes();
             
             // Load saved content
             const savedContent = localStorage.getItem('markdownContent');

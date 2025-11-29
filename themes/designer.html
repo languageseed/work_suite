@@ -860,24 +860,44 @@
         
         // ==================== COLOR EXTRACTION ====================
         async function extractColorsFromImage(src, colorCount) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                // Don't set crossOrigin for same-origin images
-                img.onload = () => {
-                    try {
-                        const colors = getColorsFromImage(img, colorCount);
-                        resolve(colors);
-                    } catch (e) {
-                        console.error('Color extraction failed:', e);
+            // Fetch image as blob to avoid CORS/tainted canvas issues
+            try {
+                let blobUrl;
+                
+                if (src.startsWith('data:')) {
+                    // Already a data URL (from file upload)
+                    blobUrl = src;
+                } else {
+                    // Fetch as blob
+                    const response = await fetch(src);
+                    const blob = await response.blob();
+                    blobUrl = URL.createObjectURL(blob);
+                }
+                
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const colors = getColorsFromImage(img, colorCount);
+                            if (!src.startsWith('data:')) {
+                                URL.revokeObjectURL(blobUrl);
+                            }
+                            resolve(colors);
+                        } catch (e) {
+                            console.error('Color extraction failed:', e);
+                            reject(e);
+                        }
+                    };
+                    img.onerror = (e) => {
+                        console.error('Image load failed:', e);
                         reject(e);
-                    }
-                };
-                img.onerror = (e) => {
-                    console.error('Image load failed:', e);
-                    reject(e);
-                };
-                img.src = src;
-            });
+                    };
+                    img.src = blobUrl;
+                });
+            } catch (e) {
+                console.error('Fetch failed:', e);
+                throw e;
+            }
         }
         
         function getColorsFromImage(img, colorCount) {

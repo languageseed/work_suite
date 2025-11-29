@@ -661,6 +661,9 @@ const WorkSuiteThemes = (function() {
                 Object.entries(customThemes).forEach(([id, theme]) => {
                     themes[id] = normalizeCustomTheme(theme);
                 });
+                if (Object.keys(customThemes).length > 0) {
+                    console.log('📚 Loaded custom themes:', Object.keys(customThemes).map(id => customThemes[id].name || id).join(', '));
+                }
             }
         } catch (e) {
             console.warn('Could not load custom themes:', e);
@@ -738,7 +741,8 @@ const WorkSuiteThemes = (function() {
             // Register normalized version in themes object
             themes[theme.id] = normalizeCustomTheme(theme);
             
-            console.log('Custom theme saved:', theme.id);
+            console.log('✅ Custom theme saved:', theme.id, theme.name);
+            console.log('📦 Total custom themes:', Object.keys(customThemes).length);
             return true;
         } catch (e) {
             console.error('Could not save custom theme:', e);

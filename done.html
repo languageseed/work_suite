@@ -1267,7 +1267,15 @@
                 if (apiResponse.ok) {
                     const file = await apiResponse.json();
                     if (file && file.app === 'done' && file.content) {
-                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        // Handle potentially multiple levels of JSON stringification
+                        let content = file.content;
+                        while (typeof content === 'string') {
+                            try {
+                                content = JSON.parse(content);
+                            } catch (e) {
+                                break;
+                            }
+                        }
                         
                         // Handle both API format (columns array with cards) and legacy format
                         if (content.columns && Array.isArray(content.columns)) {

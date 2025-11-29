@@ -1390,7 +1390,15 @@
                 if (apiResponse.ok) {
                     const file = await apiResponse.json();
                     if (file && file.app === 'journey' && file.content) {
-                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        // Handle potentially multiple levels of JSON stringification
+                        let content = file.content;
+                        while (typeof content === 'string') {
+                            try {
+                                content = JSON.parse(content);
+                            } catch (e) {
+                                break;
+                            }
+                        }
                         
                         if (content.events) {
                             events = content.events.map((e, i) => ({

@@ -1600,7 +1600,15 @@
                 if (apiResponse.ok) {
                     const file = await apiResponse.json();
                     if (file && file.app === 'metric' && file.content) {
-                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        // Handle potentially multiple levels of JSON stringification
+                        let content = file.content;
+                        while (typeof content === 'string') {
+                            try {
+                                content = JSON.parse(content);
+                            } catch (e) {
+                                break;
+                            }
+                        }
                         
                         // Handle both new format (cells/formulas) and legacy format (headers/rows)
                         data = {};

@@ -862,12 +862,20 @@
         async function extractColorsFromImage(src, colorCount) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.crossOrigin = 'anonymous';
+                // Don't set crossOrigin for same-origin images
                 img.onload = () => {
-                    const colors = getColorsFromImage(img, colorCount);
-                    resolve(colors);
+                    try {
+                        const colors = getColorsFromImage(img, colorCount);
+                        resolve(colors);
+                    } catch (e) {
+                        console.error('Color extraction failed:', e);
+                        reject(e);
+                    }
                 };
-                img.onerror = reject;
+                img.onerror = (e) => {
+                    console.error('Image load failed:', e);
+                    reject(e);
+                };
                 img.src = src;
             });
         }

@@ -214,7 +214,7 @@
         }
         
         .sidebar-section {
-            margin-bottom: 24px;
+            margin-bottom: 8px;
         }
         
         .sidebar-title {
@@ -223,11 +223,41 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-dim);
-            margin-bottom: 8px;
-            padding: 0 8px;
+            margin-bottom: 0;
+            padding: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.15s ease;
+            user-select: none;
+        }
+        
+        .sidebar-title:hover {
+            background: var(--surface-hover);
+        }
+        
+        .sidebar-title .toggle-icon {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+            opacity: 0.5;
+        }
+        
+        .sidebar-section.collapsed .sidebar-title .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .sidebar-section-content {
+            overflow: hidden;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+            max-height: 500px;
+            opacity: 1;
+        }
+        
+        .sidebar-section.collapsed .sidebar-section-content {
+            max-height: 0;
+            opacity: 0;
         }
         
         .btn-small {
@@ -937,89 +967,109 @@
                 </select>
             </div>
             
-            <div class="sidebar-section">
-                <div class="sidebar-title">Scope</div>
-                <div class="nav-item active" data-scope="all" onclick="filterByScope('all')">
-                    <span class="icon">📁</span>
-                    <span>All Files</span>
-                    <span class="count" id="countAll">0</span>
+            <div class="sidebar-section" id="sectionScope">
+                <div class="sidebar-title" onclick="toggleSection('sectionScope')">
+                    <span>Scope</span>
+                    <span class="toggle-icon">▼</span>
                 </div>
-                <div class="nav-item" data-scope="me" onclick="filterByScope('me')">
-                    <div class="scope-dot me"></div>
-                    <span>Me</span>
-                    <span class="count" id="countMe">0</span>
-                </div>
-                <div class="nav-item" data-scope="us" onclick="filterByScope('us')">
-                    <div class="scope-dot us"></div>
-                    <span>Us</span>
-                    <span class="count" id="countUs">0</span>
-                </div>
-                <div class="nav-item" data-scope="we" onclick="filterByScope('we')">
-                    <div class="scope-dot we"></div>
-                    <span>We</span>
-                    <span class="count" id="countWe">0</span>
-                </div>
-                <div class="nav-item" data-scope="there" onclick="filterByScope('there')">
-                    <div class="scope-dot there"></div>
-                    <span>There</span>
-                    <span class="count" id="countThere">0</span>
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <div class="sidebar-title">Status</div>
-                <div class="nav-item" data-status="backlog" onclick="filterByStatus('backlog')">
-                    <span class="icon">📋</span>
-                    <span>Backlog</span>
-                </div>
-                <div class="nav-item" data-status="in-progress" onclick="filterByStatus('in-progress')">
-                    <span class="icon">🔄</span>
-                    <span>In Progress</span>
-                </div>
-                <div class="nav-item" data-status="done" onclick="filterByStatus('done')">
-                    <span class="icon">✅</span>
-                    <span>Done</span>
-                </div>
-                <div class="nav-item" data-status="closed" onclick="filterByStatus('closed')">
-                    <span class="icon">📦</span>
-                    <span>Closed</span>
+                <div class="sidebar-section-content">
+                    <div class="nav-item active" data-scope="all" onclick="filterByScope('all')">
+                        <span class="icon">📁</span>
+                        <span>All Files</span>
+                        <span class="count" id="countAll">0</span>
+                    </div>
+                    <div class="nav-item" data-scope="me" onclick="filterByScope('me')">
+                        <div class="scope-dot me"></div>
+                        <span>Me</span>
+                        <span class="count" id="countMe">0</span>
+                    </div>
+                    <div class="nav-item" data-scope="us" onclick="filterByScope('us')">
+                        <div class="scope-dot us"></div>
+                        <span>Us</span>
+                        <span class="count" id="countUs">0</span>
+                    </div>
+                    <div class="nav-item" data-scope="we" onclick="filterByScope('we')">
+                        <div class="scope-dot we"></div>
+                        <span>We</span>
+                        <span class="count" id="countWe">0</span>
+                    </div>
+                    <div class="nav-item" data-scope="there" onclick="filterByScope('there')">
+                        <div class="scope-dot there"></div>
+                        <span>There</span>
+                        <span class="count" id="countThere">0</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="sidebar-section">
-                <div class="sidebar-title">Folders</div>
-                <div id="folderList"></div>
-                <div class="folder-item add-folder" onclick="createNewFolder()">
-                    <span>➕</span>
-                    <span>Add Folder</span>
+            <div class="sidebar-section collapsed" id="sectionStatus">
+                <div class="sidebar-title" onclick="toggleSection('sectionStatus')">
+                    <span>Status</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="sidebar-section-content">
+                    <div class="nav-item" data-status="backlog" onclick="filterByStatus('backlog')">
+                        <span class="icon">📋</span>
+                        <span>Backlog</span>
+                    </div>
+                    <div class="nav-item" data-status="in-progress" onclick="filterByStatus('in-progress')">
+                        <span class="icon">🔄</span>
+                        <span>In Progress</span>
+                    </div>
+                    <div class="nav-item" data-status="done" onclick="filterByStatus('done')">
+                        <span class="icon">✅</span>
+                        <span>Done</span>
+                    </div>
+                    <div class="nav-item" data-status="closed" onclick="filterByStatus('closed')">
+                        <span class="icon">📦</span>
+                        <span>Closed</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="sidebar-section">
-                <div class="sidebar-title">Apps</div>
-                <div class="nav-item" data-type="pointer" onclick="filterByType('pointer')">
-                    <span class="icon">👆</span>
-                    <span>Pointer</span>
+            <div class="sidebar-section collapsed" id="sectionFolders">
+                <div class="sidebar-title" onclick="toggleSection('sectionFolders')">
+                    <span>Folders</span>
+                    <span class="toggle-icon">▼</span>
                 </div>
-                <div class="nav-item" data-type="slate" onclick="filterByType('slate')">
-                    <span class="icon">📝</span>
-                    <span>Slate</span>
+                <div class="sidebar-section-content">
+                    <div id="folderList"></div>
+                    <div class="folder-item add-folder" onclick="createNewFolder()">
+                        <span>➕</span>
+                        <span>Add Folder</span>
+                    </div>
                 </div>
-                <div class="nav-item" data-type="done" onclick="filterByType('done')">
-                    <span class="icon">✅</span>
-                    <span>Done</span>
+            </div>
+            
+            <div class="sidebar-section collapsed" id="sectionApps">
+                <div class="sidebar-title" onclick="toggleSection('sectionApps')">
+                    <span>Apps</span>
+                    <span class="toggle-icon">▼</span>
                 </div>
-                <div class="nav-item" data-type="journey" onclick="filterByType('journey')">
-                    <span class="icon">🛤️</span>
-                    <span>Journey</span>
-                </div>
-                <div class="nav-item" data-type="merman" onclick="filterByType('merman')">
-                    <span class="icon">🐠</span>
-                    <span>Merman</span>
-                </div>
-                <div class="nav-item" data-type="metric" onclick="filterByType('metric')">
-                    <span class="icon">📊</span>
-                    <span>Metric</span>
+                <div class="sidebar-section-content">
+                    <div class="nav-item" data-type="pointer" onclick="filterByType('pointer')">
+                        <span class="icon">👆</span>
+                        <span>Pointer</span>
+                    </div>
+                    <div class="nav-item" data-type="slate" onclick="filterByType('slate')">
+                        <span class="icon">📝</span>
+                        <span>Slate</span>
+                    </div>
+                    <div class="nav-item" data-type="done" onclick="filterByType('done')">
+                        <span class="icon">✅</span>
+                        <span>Done</span>
+                    </div>
+                    <div class="nav-item" data-type="journey" onclick="filterByType('journey')">
+                        <span class="icon">🛤️</span>
+                        <span>Journey</span>
+                    </div>
+                    <div class="nav-item" data-type="merman" onclick="filterByType('merman')">
+                        <span class="icon">🐠</span>
+                        <span>Merman</span>
+                    </div>
+                    <div class="nav-item" data-type="metric" onclick="filterByType('metric')">
+                        <span class="icon">📊</span>
+                        <span>Metric</span>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -1188,6 +1238,9 @@
         
         // ==================== INITIALIZATION ====================
         async function init() {
+            // Load sidebar collapsed state
+            loadSidebarState();
+            
             // Check if user is authenticated
             const isAuth = await checkAuth();
             if (isAuth) {
@@ -2010,6 +2063,48 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        // ==================== SIDEBAR TOGGLE ====================
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('collapsed');
+                // Save collapsed state to localStorage
+                saveSidebarState();
+            }
+        }
+        
+        function saveSidebarState() {
+            const sections = ['sectionScope', 'sectionStatus', 'sectionFolders', 'sectionApps'];
+            const state = {};
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    state[id] = section.classList.contains('collapsed');
+                }
+            });
+            localStorage.setItem('tags-sidebar-state', JSON.stringify(state));
+        }
+        
+        function loadSidebarState() {
+            try {
+                const state = JSON.parse(localStorage.getItem('tags-sidebar-state'));
+                if (state) {
+                    Object.keys(state).forEach(id => {
+                        const section = document.getElementById(id);
+                        if (section) {
+                            if (state[id]) {
+                                section.classList.add('collapsed');
+                            } else {
+                                section.classList.remove('collapsed');
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                // Ignore errors
+            }
         }
         
         function showToast(message) {

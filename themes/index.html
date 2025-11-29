@@ -381,6 +381,8 @@
             <a href="designer.html" class="designer-link">
                 🎨 Create New Theme
             </a>
+            
+            <div id="debugInfo" style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 11px; color: var(--app-muted);"></div>
         </aside>
 
         <main class="main">
@@ -623,6 +625,18 @@ console.log(greet('World'));</code></pre>
             // Load custom themes from localStorage first
             if (WorkSuiteThemes.loadCustomThemes) {
                 WorkSuiteThemes.loadCustomThemes();
+            }
+            
+            // Debug: show localStorage contents
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                const customThemesRaw = localStorage.getItem('worksuite-custom-themes');
+                const customIds = WorkSuiteThemes.getCustomThemeIds ? WorkSuiteThemes.getCustomThemeIds() : [];
+                debugInfo.innerHTML = `
+                    <strong>Debug:</strong><br>
+                    Custom themes in localStorage: ${customIds.length > 0 ? customIds.join(', ') : 'none'}<br>
+                    Raw: ${customThemesRaw ? customThemesRaw.substring(0, 100) + '...' : 'null'}
+                `;
             }
             
             // Load saved preference

@@ -902,6 +902,9 @@
             // If no files, load demo data
             if (files.length === 0) {
                 loadDemoData();
+            } else {
+                // Check if demo files need content added (upgrade from old version)
+                upgradeDemoFilesWithContent();
             }
             
             renderFiles();
@@ -912,6 +915,60 @@
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 filterBySearch(e.target.value);
             });
+        }
+        
+        // Upgrade existing demo files to include content
+        function upgradeDemoFilesWithContent() {
+            const demoContent = getDemoContent();
+            let updated = false;
+            
+            files.forEach(file => {
+                if (file.id && file.id.startsWith('demo-') && !file.content) {
+                    const content = demoContent[file.id];
+                    if (content) {
+                        file.content = content;
+                        updated = true;
+                    }
+                }
+            });
+            
+            if (updated) {
+                saveToLocalStorage();
+                console.log('Upgraded demo files with content');
+            }
+        }
+        
+        function getDemoContent() {
+            return {
+                'demo-1': `# Q4 Marketing Plan\n\n---\n\n## Goals\n\n- Increase brand awareness by 25%\n- Launch 3 new product campaigns\n- Grow social media following\n\n---\n\n## Timeline\n\n| Month | Focus |\n|-------|-------|\n| October | Campaign prep |\n| November | Launch |\n| December | Review |`,
+                'demo-2': `# Meeting Notes\n\n**Date:** November 28, 2024\n**Attendees:** Team leads\n\n## Action Items\n\n- [ ] Review Q4 goals\n- [ ] Update roadmap\n- [x] Schedule follow-up\n\n## Discussion Points\n\nKey decisions made regarding the product launch timeline.`,
+                'demo-3': JSON.stringify({
+                    columns: ['Backlog', 'In Progress', 'Done'],
+                    cards: [
+                        { id: 1, column: 'Backlog', title: 'Setup CI/CD' },
+                        { id: 2, column: 'In Progress', title: 'API Integration' },
+                        { id: 3, column: 'Done', title: 'Database Design' }
+                    ]
+                }),
+                'demo-4': JSON.stringify({
+                    events: [
+                        { date: '2024-01', title: 'MVP Launch', description: 'Initial release' },
+                        { date: '2024-06', title: 'V2 Release', description: 'Major update' },
+                        { date: '2024-12', title: 'Enterprise', description: 'Enterprise features' }
+                    ]
+                }),
+                'demo-5': `# API Documentation\n\n## Endpoints\n\n### GET /users\n\nReturns a list of users.\n\n\`\`\`json\n{\n  "users": []\n}\n\`\`\`\n\n## Diagram\n\n\`\`\`mermaid\nsequenceDiagram\n    Client->>API: GET /users\n    API->>DB: Query users\n    DB-->>API: User list\n    API-->>Client: JSON response\n\`\`\``,
+                'demo-6': JSON.stringify({
+                    headers: ['Category', 'Budget', 'Spent', 'Remaining'],
+                    rows: [
+                        ['Marketing', 5000, 3200, 1800],
+                        ['Development', 10000, 8500, 1500],
+                        ['Operations', 3000, 2100, 900]
+                    ]
+                }),
+                'demo-7': `# Team Onboarding\n\n---\n\n## Welcome!\n\nWelcome to the team. This presentation covers everything you need to get started.\n\n---\n\n## First Week\n\n1. Setup your environment\n2. Meet the team\n3. Review documentation\n\n---\n\n## Resources\n\n- Company Wiki\n- Slack channels\n- Team calendar`,
+                'demo-8': `# Ideas & Brainstorm\n\n## Product Ideas\n\n- AI-powered search\n- Real-time collaboration\n- Mobile app\n\n## Features to Explore\n\n- Voice notes\n- OCR for images\n- Integration with calendars`
+            };
         }
         
         function loadDemoData() {

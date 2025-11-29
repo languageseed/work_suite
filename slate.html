@@ -1036,14 +1036,16 @@
                 
                 if (file && file.type === 'slate' && file.content) {
                     // Create or update a note with the Tags content
-                    const existingNote = notes.find(n => n.tagsId === tagsId);
+                    let noteToOpen = notes.find(n => n.tagsId === tagsId);
                     
-                    if (existingNote) {
-                        // Update existing linked note
-                        currentNote = existingNote;
+                    if (noteToOpen) {
+                        // Update existing linked note with latest content
+                        noteToOpen.content = file.content;
+                        noteToOpen.title = file.name;
+                        saveToLocalStorage();
                     } else {
                         // Create new note from Tags file
-                        const newNote = {
+                        noteToOpen = {
                             id: Date.now(),
                             tagsId: tagsId,
                             title: file.name,
@@ -1052,14 +1054,13 @@
                             createdAt: new Date(file.createdAt).toISOString(),
                             updatedAt: new Date().toISOString()
                         };
-                        notes.unshift(newNote);
+                        notes.unshift(noteToOpen);
                         saveToLocalStorage();
-                        currentNote = newNote;
                     }
                     
-                    // Open the note
-                    showEditor();
+                    // Open the note in the editor
                     renderNotes();
+                    openNote(noteToOpen.id);
                     showNotification(`Opened "${file.name}" from Tags`);
                 } else {
                     showNotification('File not found in Tags', 'error');

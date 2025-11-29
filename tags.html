@@ -196,6 +196,39 @@
             color: var(--text-dim);
             margin-bottom: 8px;
             padding: 0 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-small {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-small:hover {
+            opacity: 1;
+        }
+        
+        .workspace-select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+        
+        .workspace-select:focus {
+            outline: none;
+            border-color: var(--accent);
         }
         
         .nav-item {
@@ -760,6 +793,17 @@
         </header>
         
         <aside class="sidebar">
+            <!-- Workspace Selector (Service-0 Integration) -->
+            <div class="sidebar-section" id="workspaceSection" style="display: none;">
+                <div class="sidebar-title">
+                    Workspace
+                    <button class="btn-small" onclick="createWorkspace()" title="Create Workspace">➕</button>
+                </div>
+                <select id="workspaceSelect" class="workspace-select" onchange="selectWorkspace(this.value)">
+                    <option value="">Local Storage</option>
+                </select>
+            </div>
+            
             <div class="sidebar-section">
                 <div class="sidebar-title">Scope</div>
                 <div class="nav-item active" data-scope="all" onclick="filterByScope('all')">
@@ -895,8 +939,112 @@
             metric: { icon: '📊', name: 'Metric Sheet', color: 'var(--app-metric)' }
         };
         
+        // ==================== WORKSPACE MANAGEMENT ====================
+        let currentUser = null;
+        let workspaces = [];
+        let currentWorkspace = null;
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/session', { credentials: 'include' });
+                const data = await response.json();
+                if (data.authenticated && data.user) {
+                    currentUser = data.user;
+                    return true;
+                }
+            } catch (e) {
+                console.log('Auth check failed (offline mode)');
+            }
+            return false;
+        }
+        
+        async function loadWorkspaces() {
+            if (!currentUser) return;
+            
+            try {
+                const response = await fetch('/api/workspaces', { credentials: 'include' });
+                workspaces = await response.json();
+                
+                const select = document.getElementById('workspaceSelect');
+                select.innerHTML = '<option value="">Local Storage</option>';
+                
+                workspaces.forEach(ws => {
+                    const option = document.createElement('option');
+                    option.value = ws.workspace_id;
+                    option.textContent = ws.name;
+                    select.appendChild(option);
+                });
+                
+                // Show workspace section
+                document.getElementById('workspaceSection').style.display = 'block';
+            } catch (e) {
+                console.log('Failed to load workspaces:', e);
+            }
+        }
+        
+        async function selectWorkspace(workspaceId) {
+            currentWorkspace = workspaceId || null;
+            
+            if (workspaceId) {
+                // Load files from API for this workspace
+                try {
+                    const response = await fetch(`/api/items?workspace_id=${workspaceId}`, { credentials: 'include' });
+                    files = await response.json();
+                } catch (e) {
+                    console.log('Failed to load workspace files:', e);
+                    files = [];
+                }
+            } else {
+                // Load from localStorage
+                loadFromLocalStorage();
+                if (files.length === 0) {
+                    loadDemoData();
+                }
+            }
+            
+            renderFiles();
+            renderFolders();
+            updateCounts();
+        }
+        
+        async function createWorkspace() {
+            const name = prompt('Enter workspace name:');
+            if (!name) return;
+            
+            try {
+                const response = await fetch('/api/workspaces', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description: 'Created from Tags app',
+                        type: 'personal'
+                    })
+                });
+                
+                if (response.ok) {
+                    const workspace = await response.json();
+                    showToast(`Workspace "${name}" created`);
+                    await loadWorkspaces();
+                    document.getElementById('workspaceSelect').value = workspace.workspace_id;
+                    selectWorkspace(workspace.workspace_id);
+                } else {
+                    showToast('Failed to create workspace', true);
+                }
+            } catch (e) {
+                showToast('Failed to create workspace', true);
+            }
+        }
+        
         // ==================== INITIALIZATION ====================
-        function init() {
+        async function init() {
+            // Check if user is authenticated
+            const isAuth = await checkAuth();
+            if (isAuth) {
+                await loadWorkspaces();
+            }
+            
             loadFromLocalStorage();
             
             // If no files, load demo data
@@ -1486,8 +1634,45 @@
         
         // ==================== STORAGE ====================
         function saveToLocalStorage() {
+            // Always save to localStorage as backup
             localStorage.setItem('tags-files', JSON.stringify(files));
             localStorage.setItem('tags-folders', JSON.stringify(folders));
+        }
+        
+        // Save file to API (when workspace is selected)
+        async function saveFileToAPI(file) {
+            if (!currentWorkspace || !currentUser) return;
+            
+            try {
+                const method = file.apiId ? 'PUT' : 'POST';
+                const url = file.apiId ? `/api/items/${file.apiId}` : '/api/items';
+                
+                const response = await fetch(url, {
+                    method,
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: file.name,
+                        type: file.type,
+                        app: file.type,
+                        scope: file.scope,
+                        folder: file.folder,
+                        status: file.status,
+                        content: file.content,
+                        workspace_id: currentWorkspace,
+                        tags: file.tags
+                    })
+                });
+                
+                if (response.ok) {
+                    const savedFile = await response.json();
+                    file.apiId = savedFile.id;
+                    return savedFile;
+                }
+            } catch (e) {
+                console.error('Failed to save file to API:', e);
+            }
+            return null;
         }
         
         function loadFromLocalStorage() {

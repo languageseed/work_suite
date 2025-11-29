@@ -794,9 +794,36 @@
         
         // ==================== INITIALIZATION ====================
         function init() {
+            // Check if running from file:// protocol
+            if (window.location.protocol === 'file:') {
+                showFileProtocolWarning();
+            }
+            
             renderImageGrid();
             setupCategoryTabs();
             loadGoogleFonts();
+        }
+        
+        function showFileProtocolWarning() {
+            const warning = document.createElement('div');
+            warning.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: #000;
+                padding: 12px 24px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: 500;
+            `;
+            warning.innerHTML = `
+                ⚠️ <strong>Local Server Required</strong> - Color extraction won't work with file:// protocol. 
+                Run: <code style="background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px;">python3 -m http.server 8765</code> 
+                then open <a href="http://localhost:8765/themes/designer.html" style="color: #000; text-decoration: underline;">http://localhost:8765/themes/designer.html</a>
+            `;
+            document.body.prepend(warning);
         }
         
         function renderImageGrid() {

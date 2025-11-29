@@ -79,6 +79,25 @@
             flex-shrink: 0;
         }
 
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--surface);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            margin-right: 12px;
+        }
+        
+        .home-btn:hover {
+            background: var(--border);
+            transform: scale(1.05);
+        }
+        
         .logo {
             display: flex;
             align-items: center;
@@ -846,6 +865,7 @@
 <body>
     <div class="app">
         <header>
+            <a href="index.html" class="home-btn" title="Back to Work Suite">🏠</a>
             <div class="logo">
                 <div class="logo-icon">📝</div>
                 <span>Slate</span>

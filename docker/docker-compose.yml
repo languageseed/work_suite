@@ -1,0 +1,77 @@
+# Work Suite Container Stack
+# Storage: /zfs/data/work_suite (ZFS on seed)
+# Ports: 8500-8501
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Work Suite Web App (Static Frontend)
+  # ===========================================
+  worksuite-web:
+    image: nginx:alpine
+    container_name: worksuite-web
+    restart: unless-stopped
+    ports:
+      - "8500:80"
+    volumes:
+      - ../:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - worksuite-net
+    depends_on:
+      - worksuite-api
+    labels:
+      - "com.worksuite.service=web"
+
+  # ===========================================
+  # Work Suite API (SQLite + Filesystem)
+  # ===========================================
+  worksuite-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: worksuite-api
+    restart: unless-stopped
+    ports:
+      - "8501:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_PATH=/data
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - AI_PROVIDER=${AI_PROVIDER:-none}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - /zfs/data/work_suite:/data
+    networks:
+      - worksuite-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.worksuite.service=api"
+
+networks:
+  worksuite-net:
+    name: worksuite-net
+    driver: bridge
+
+# ===========================================
+# Port Summary:
+#   8500 - Web UI (nginx)
+#   8501 - API (node + SQLite)
+#
+# Storage on ZFS:
+#   /tank/data/work_suite/
+#   ├── worksuite.db     (SQLite database)
+#   ├── files/           (User files)
+#   │   ├── me/          (Private)
+#   │   ├── us/          (Shared)
+#   │   ├── we/          (Team)
+#   │   └── there/       (External)
+#   └── backups/         (Auto backups)
+# ===========================================

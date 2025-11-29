@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Designer - Work Suite</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Culori for color conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/culori@4.0.1/bundled/culori.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-hover: #1a1a24;
+            --border: #2a2a3a;
+            --text: #e8e8f0;
+            --text-muted: #8888a0;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+        
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        /* Left Sidebar - Image Gallery */
+        .image-sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .image-thumb {
+            aspect-ratio: 16/10;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .image-thumb:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+        
+        .image-thumb.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        
+        .image-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .upload-zone svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .upload-text {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Main Content */
+        main {
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Color Palette Display */
+        .palette-section {
+            margin-bottom: 20px;
+        }
+        
+        .palette-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .palette-colors {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .color-swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.1);
+            z-index: 1;
+        }
+        
+        .color-swatch.selected {
+            border-color: white;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+        
+        .color-swatch::after {
+            content: attr(data-hex);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .color-swatch:hover::after {
+            opacity: 1;
+        }
+        
+        /* Palette Variations */
+        .variations-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .variation-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .variation-card:hover {
+            border-color: var(--accent);
+        }
+        
+        .variation-card.active {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .variation-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .variation-preview {
+            display: flex;
+            gap: 2px;
+            height: 24px;
+        }
+        
+        .variation-preview span {
+            flex: 1;
+            border-radius: 3px;
+        }
+        
+        /* Font Picker */
+        .font-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .font-group {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .font-group-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .font-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .font-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--surface);
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Right Sidebar - Preview & Export */
+        .preview-sidebar {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .theme-preview {
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 300px;
+        }
+        
+        .theme-preview h1 {
+            margin-bottom: 8px;
+        }
+        
+        .theme-preview h2 {
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+        
+        .theme-preview p {
+            margin-bottom: 16px;
+            opacity: 0.8;
+        }
+        
+        .theme-preview code {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        
+        .theme-preview blockquote {
+            border-left: 4px solid;
+            padding-left: 16px;
+            margin: 16px 0;
+            font-style: italic;
+        }
+        
+        /* Theme Name Input */
+        .theme-name-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .theme-name-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        /* Color Role Mapping */
+        .role-mapping {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .role-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--bg);
+            border-radius: 6px;
+        }
+        
+        .role-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .role-name {
+            font-size: 12px;
+            font-weight: 500;
+            flex: 1;
+        }
+        
+        .role-value {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+        }
+        
+        /* Export Section */
+        .export-section {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .export-code {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #a8b2d1;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .category-tab {
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+        
+        .category-tab:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        
+        .category-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🎨</span>
+                <span>Theme Designer</span>
+            </div>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-secondary">← Back to Themes</a>
+                <button class="btn btn-primary" onclick="exportTheme()">
+                    💾 Export Theme
+                </button>
+            </div>
+        </header>
+        
+        <!-- Left Sidebar: Image Gallery -->
+        <aside class="image-sidebar">
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div class="upload-text">Upload your own image</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" hidden onchange="handleImageUpload(event)">
+            
+            <div class="sidebar-title">📸 Sample Images</div>
+            <div class="category-tabs" id="categoryTabs">
+                <button class="category-tab active" data-category="all">All</button>
+                <button class="category-tab" data-category="nature">Nature</button>
+                <button class="category-tab" data-category="abstract">Abstract</button>
+                <button class="category-tab" data-category="sunset">Sunset</button>
+            </div>
+            <div class="image-grid" id="imageGrid">
+                <div class="loading"><div class="spinner"></div> Loading...</div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main>
+            <!-- Extracted Colors -->
+            <div class="panel" id="colorsPanel">
+                <div class="panel-title">🎯 Extracted Colors</div>
+                <div id="extractedColors" class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <p>Select an image to extract colors</p>
+                </div>
+            </div>
+            
+            <!-- Palette Variations -->
+            <div class="panel" id="variationsPanel" style="display: none;">
+                <div class="panel-title">✨ Palette Variations</div>
+                <div class="variations-grid" id="variationsGrid"></div>
+            </div>
+            
+            <!-- Font Selection -->
+            <div class="panel">
+                <div class="panel-title">🔤 Typography</div>
+                <div class="font-section">
+                    <div class="font-group">
+                        <div class="font-group-title">Heading Font</div>
+                        <select class="font-select" id="headingFont" onchange="updateFontPreview()">
+                            <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+                            <option value="'Playfair Display', serif">Playfair Display</option>
+                            <option value="'Montserrat', sans-serif">Montserrat</option>
+                            <option value="'Merriweather', serif">Merriweather</option>
+                            <option value="'Poppins', sans-serif">Poppins</option>
+                            <option value="'Crimson Pro', serif">Crimson Pro</option>
+                            <option value="'Outfit', sans-serif">Outfit</option>
+                            <option value="'Libre Baskerville', serif">Libre Baskerville</option>
+                            <option value="'DM Sans', sans-serif">DM Sans</option>
+                            <option value="'Lora', serif">Lora</option>
+                        </select>
+                        <div class="font-preview" id="headingPreview" style="font-family: 'Space Grotesk', sans-serif;">
+                            Heading Preview
+                        </div>
+                    </div>
+                    <div class="font-group">
+                        <div class="font-group-title">Body Font</div>
+                        <select class="font-select" id="bodyFont" onchange="updateFontPreview()">
+                            <option value="'Inter', sans-serif">Inter</option>
+                            <option value="'Source Sans 3', sans-serif">Source Sans 3</option>
+                            <option value="'Open Sans', sans-serif">Open Sans</option>
+                            <option value="'Lato', sans-serif">Lato</option>
+                            <option value="'Nunito', sans-serif">Nunito</option>
+                            <option value="'IBM Plex Sans', sans-serif">IBM Plex Sans</option>
+                            <option value="'Roboto', sans-serif">Roboto</option>
+                            <option value="'Work Sans', sans-serif">Work Sans</option>
+                            <option value="'Mulish', sans-serif">Mulish</option>
+                            <option value="'Karla', sans-serif">Karla</option>
+                        </select>
+                        <div class="font-preview" id="bodyPreview" style="font-family: 'Inter', sans-serif;">
+                            Body text preview
+                        </div>
+                    </div>
+                    <div class="font-group">
+                        <div class="font-group-title">Mono Font</div>
+                        <select class="font-select" id="monoFont" onchange="updateFontPreview()">
+                            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                            <option value="'Fira Code', monospace">Fira Code</option>
+                            <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                            <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+                            <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                            <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+                        </select>
+                        <div class="font-preview" id="monoPreview" style="font-family: 'JetBrains Mono', monospace;">
+                            const code = "preview";
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Right Sidebar: Preview & Export -->
+        <aside class="preview-sidebar">
+            <div class="sidebar-title">📝 Theme Name</div>
+            <input type="text" class="theme-name-input" id="themeName" value="Custom Theme" placeholder="Enter theme name...">
+            
+            <div class="sidebar-title">👁️ Live Preview</div>
+            <div class="theme-preview" id="themePreview">
+                <h1>Welcome</h1>
+                <h2>Subtitle Here</h2>
+                <p>This is how your content will look with the selected theme colors and typography.</p>
+                <p>Here's some <code>inline code</code> styling.</p>
+                <blockquote>A beautiful quote with accent styling.</blockquote>
+            </div>
+            
+            <div class="sidebar-title">🎨 Color Roles</div>
+            <div class="role-mapping" id="roleMapping">
+                <div class="empty-state" style="padding: 20px;">
+                    <p style="font-size: 12px;">Colors will appear here</p>
+                </div>
+            </div>
+            
+            <div class="sidebar-title">📦 Export</div>
+            <div class="export-section">
+                <div class="export-code" id="exportCode">// Select an image to generate theme code</div>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="copyThemeCode()">📋 Copy</button>
+                    <button class="btn btn-success" style="flex: 1;" onclick="downloadTheme()">⬇️ Download</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ==================== STATE ====================
+        let currentImage = null;
+        let extractedColors = [];
+        let selectedVariation = 'primary';
+        let currentPalettes = null;
+        let assignedRoles = null;
+        
+        // Sample images from the images folder
+        const sampleImages = [
+            'ameer-basheer-Xrx3WWyrwes-unsplash.jpg',
+            'andreas-gucklhorn-mawU2PoJWfU-unsplash.jpg',
+            'andrew-ridley-jR4Zf-riEjI-unsplash.jpg',
+            'aniket-deole-M6XC789HLe8-unsplash.jpg',
+            'aperture-vintage-NrAvSjyW3D4-unsplash.jpg',
+            'ashim-d-silva-WeYamle9fDM-unsplash.jpg',
+            'axel-ruffini-cVNocf2UtbY-unsplash.jpg',
+            'bailey-zindel-NRQV-hBF10M-unsplash.jpg',
+            'benjamin-voros-phIFdC6lA4E-unsplash.jpg',
+            'cihad-dagli-oRruoqIaaDQ-unsplash.jpg',
+            'clay-banks-u27Rrbs9Dwc-unsplash.jpg',
+            'cristina-gottardi-CSpjU6hYo_0-unsplash.jpg',
+            'daniel-leone-g30P1zcOzXo-unsplash.jpg',
+            'daniel-leone-v7daTKlZzaw-unsplash.jpg',
+            'jeremy-bishop-B2Q7UC6QGLE-unsplash.jpg',
+            'jeremy-thomas-E0AHdsENmDg-unsplash.jpg',
+            'john-fowler-RsRTIofe0HE-unsplash.jpg',
+            'jonatan-pie-3l3RwQdHRHg-unsplash.jpg',
+            'jonatan-pie-3N5ccOE3wGg-unsplash.jpg',
+            'kalen-emsley-Bkci_8qcdvQ-unsplash.jpg',
+            'luca-bravo-4yta6mU66dE-unsplash.jpg',
+            'martin-martz-OR8DEvVhym0-unsplash.jpg',
+            'maxim-berg-3E2xgrlNXq4-unsplash.jpg',
+            'maxim-berg-EirX0QN4-Sk-unsplash.jpg',
+            'milad-fakurian-0_8gAoFrzbw-unsplash.jpg',
+            'milad-fakurian-CdAmQAko9As-unsplash.jpg',
+            'pawel-czerwinski-PvgqqicSLvA-unsplash.jpg',
+            'pawel-czerwinski-YAtspJ-HV2E-unsplash.jpg',
+            'pexels-eberhardgross-1062249.jpg',
+            'pexels-eberhardgross-443446.jpg',
+            'pexels-felix-mittermeier-956981.jpg',
+            'pexels-pok-rie-33563-2049422.jpg',
+            'philip-oroni-gftMuFt8vNk-unsplash.jpg',
+            'silas-baisch-OCzvgBqCJKY-unsplash.jpg'
+        ];
+        
+        // ==================== CULORI SETUP ====================
+        const rgbToOklch = culori.converter('oklch');
+        const oklchToRgb = culori.converter('rgb');
+        
+        // ==================== INITIALIZATION ====================
+        function init() {
+            renderImageGrid();
+            setupCategoryTabs();
+            loadGoogleFonts();
+        }
+        
+        function renderImageGrid() {
+            const grid = document.getElementById('imageGrid');
+            grid.innerHTML = sampleImages.map(img => `
+                <div class="image-thumb" onclick="selectImage('images/${img}')" data-src="images/${img}">
+                    <img src="images/${img}" alt="${img}" loading="lazy">
+                </div>
+            `).join('');
+        }
+        
+        function setupCategoryTabs() {
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    // Filter logic would go here
+                });
+            });
+        }
+        
+        // ==================== IMAGE HANDLING ====================
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function selectImage(src) {
+            // Update active state
+            document.querySelectorAll('.image-thumb').forEach(t => t.classList.remove('active'));
+            const thumb = document.querySelector(`.image-thumb[data-src="${src}"]`);
+            if (thumb) thumb.classList.add('active');
+            
+            currentImage = src;
+            
+            // Extract colors
+            const colors = await extractColorsFromImage(src, 12);
+            extractedColors = colors;
+            
+            // Generate palettes
+            currentPalettes = generateAllPalettes(colors);
+            
+            // Assign roles
+            assignedRoles = assignColorRoles(colors);
+            
+            // Render UI
+            renderExtractedColors(colors);
+            renderVariations();
+            renderRoleMapping();
+            updateThemePreview();
+            generateExportCode();
+            
+            document.getElementById('variationsPanel').style.display = 'block';
+        }
+        
+        // ==================== COLOR EXTRACTION ====================
+        async function extractColorsFromImage(src, colorCount) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const colors = getColorsFromImage(img, colorCount);
+                    resolve(colors);
+                };
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+        
+        function getColorsFromImage(img, colorCount) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            
+            const maxSize = 150;
+            const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+            canvas.width = Math.max(Math.floor(img.width * scale), 1);
+            canvas.height = Math.max(Math.floor(img.height * scale), 1);
+            
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            
+            const uniqueColors = extractUniqueColors(pixels);
+            const clusteredColors = kMeansClustering(uniqueColors, colorCount);
+            
+            return clusteredColors.map(color => {
+                const rgbColor = {
+                    mode: 'rgb',
+                    r: color[0] / 255,
+                    g: color[1] / 255,
+                    b: color[2] / 255
+                };
+                
+                const oklchColor = rgbToOklch(rgbColor);
+                
+                return {
+                    rgb: `rgb(${color[0]}, ${color[1]}, ${color[2]})`,
+                    hex: rgbToHex(color[0], color[1], color[2]),
+                    oklch: culori.formatCss(oklchColor),
+                    oklchValues: {
+                        l: oklchColor.l !== undefined ? oklchColor.l : 0,
+                        c: oklchColor.c !== undefined ? oklchColor.c : 0,
+                        h: oklchColor.h !== undefined ? oklchColor.h : 0
+                    }
+                };
+            });
+        }
+        
+        function extractUniqueColors(pixels) {
+            const colorMap = new Map();
+            
+            for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const a = pixels[i + 3];
+                
+                if (a < 128) continue;
+                
+                const quantize = 8;
+                const qr = Math.floor(r / quantize) * quantize;
+                const qg = Math.floor(g / quantize) * quantize;
+                const qb = Math.floor(b / quantize) * quantize;
+                
+                const colorKey = `${qr},${qg},${qb}`;
+                colorMap.set(colorKey, (colorMap.get(colorKey) || 0) + 1);
+            }
+            
+            const uniqueColors = [];
+            colorMap.forEach((count, key) => {
+                const [r, g, b] = key.split(',').map(Number);
+                const weight = Math.min(count, 10);
+                for (let i = 0; i < weight; i++) {
+                    uniqueColors.push([r, g, b]);
+                }
+            });
+            
+            return uniqueColors;
+        }
+        
+        function kMeansClustering(samples, k, maxIterations = 15) {
+            if (samples.length === 0) return [];
+            if (samples.length <= k) return samples;
+            
+            // K-means++ initialization
+            let centroids = [samples[Math.floor(Math.random() * samples.length)]];
+            
+            for (let i = 1; i < k; i++) {
+                const distances = samples.map(sample => {
+                    const minDist = Math.min(...centroids.map(c => colorDistance(sample, c)));
+                    return minDist * minDist;
+                });
+                
+                const totalDist = distances.reduce((sum, d) => sum + d, 0);
+                let random = Math.random() * totalDist;
+                
+                for (let j = 0; j < samples.length; j++) {
+                    random -= distances[j];
+                    if (random <= 0) {
+                        centroids.push(samples[j]);
+                        break;
+                    }
+                }
+            }
+            
+            // Iterate
+            for (let iter = 0; iter < maxIterations; iter++) {
+                const clusters = Array.from({ length: k }, () => []);
+                
+                samples.forEach(sample => {
+                    let minDist = Infinity;
+                    let clusterIndex = 0;
+                    
+                    centroids.forEach((centroid, i) => {
+                        const dist = colorDistance(sample, centroid);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            clusterIndex = i;
+                        }
+                    });
+                    
+                    clusters[clusterIndex].push(sample);
+                });
+                
+                centroids = clusters.map((cluster, idx) => {
+                    if (cluster.length === 0) return centroids[idx];
+                    
+                    const sum = cluster.reduce(
+                        (acc, color) => [acc[0] + color[0], acc[1] + color[1], acc[2] + color[2]],
+                        [0, 0, 0]
+                    );
+                    
+                    return [
+                        Math.round(sum[0] / cluster.length),
+                        Math.round(sum[1] / cluster.length),
+                        Math.round(sum[2] / cluster.length)
+                    ];
+                });
+            }
+            
+            return centroids;
+        }
+        
+        function colorDistance(c1, c2) {
+            return Math.sqrt(
+                Math.pow(c1[0] - c2[0], 2) +
+                Math.pow(c1[1] - c2[1], 2) +
+                Math.pow(c1[2] - c2[2], 2)
+            );
+        }
+        
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+        
+        // ==================== PALETTE VARIATIONS ====================
+        function generateAllPalettes(primaryPalette) {
+            return {
+                primary: { name: 'Original', colors: primaryPalette },
+                soft: { name: 'Soft Pastels', colors: generateSoftPalette(primaryPalette) },
+                vibrant: { name: 'Vibrant Bold', colors: generateVibrantPalette(primaryPalette) },
+                dark: { name: 'Dark Mode', colors: generateDarkPalette(primaryPalette) },
+                warm: { name: 'Warm Tones', colors: generateWarmPalette(primaryPalette) },
+                cool: { name: 'Cool Tones', colors: generateCoolPalette(primaryPalette) }
+            };
+        }
+        
+        function generateSoftPalette(palette) {
+            return palette.map(color => {
+                const oklch = rgbToOklch(color.hex);
+                const soft = {
+                    mode: 'oklch',
+                    l: Math.min(oklch.l + 0.15, 0.95),
+                    c: oklch.c * 0.4,
+                    h: oklch.h
+                };
+                return createColorObject(soft);
+            });
+        }
+        
+        function generateVibrantPalette(palette) {
+            return palette.map(color => {
+                const oklch = rgbToOklch(color.hex);
+                const vibrant = {
+                    mode: 'oklch',
+                    l: Math.max(0.4, Math.min(0.7, oklch.l)),
+                    c: Math.min(oklch.c * 1.8, 0.37),
+                    h: oklch.h
+                };
+                return createColorObject(vibrant);
+            });
+        }
+        
+        function generateDarkPalette(palette) {
+            return palette.map(color => {
+                const oklch = rgbToOklch(color.hex);
+                const dark = {
+                    mode: 'oklch',
+                    l: Math.max(0.15, oklch.l * 0.5),
+                    c: oklch.c * 0.9,
+                    h: oklch.h
+                };
+                return createColorObject(dark);
+            });
+        }
+        
+        function generateWarmPalette(palette) {
+            return palette.map(color => {
+                const oklch = rgbToOklch(color.hex);
+                const warm = {
+                    mode: 'oklch',
+                    l: Math.max(0.45, oklch.l),
+                    c: oklch.c * 0.85,
+                    h: oklch.h !== undefined ? 30 + (oklch.h * 0.2) : 30
+                };
+                return createColorObject(warm);
+            });
+        }
+        
+        function generateCoolPalette(palette) {
+            return palette.map(color => {
+                const oklch = rgbToOklch(color.hex);
+                const cool = {
+                    mode: 'oklch',
+                    l: Math.min(0.75, oklch.l + 0.05),
+                    c: oklch.c * 0.85,
+                    h: oklch.h !== undefined ? 220 + (oklch.h * 0.2) : 220
+                };
+                return createColorObject(cool);
+            });
+        }
+        
+        function createColorObject(oklchColor) {
+            const rgb = oklchToRgb(oklchColor);
+            const r = Math.round(Math.max(0, Math.min(255, rgb.r * 255)));
+            const g = Math.round(Math.max(0, Math.min(255, rgb.g * 255)));
+            const b = Math.round(Math.max(0, Math.min(255, rgb.b * 255)));
+            
+            return {
+                rgb: `rgb(${r}, ${g}, ${b})`,
+                hex: rgbToHex(r, g, b),
+                oklch: culori.formatCss(oklchColor),
+                oklchValues: {
+                    l: oklchColor.l || 0,
+                    c: oklchColor.c || 0,
+                    h: oklchColor.h || 0
+                }
+            };
+        }
+        
+        // ==================== COLOR ROLE ASSIGNMENT ====================
+        function assignColorRoles(colors) {
+            if (!colors || colors.length === 0) return null;
+            
+            const parsed = colors.map(color => ({
+                ...color,
+                lightness: color.oklchValues.l * 100,
+                chroma: color.oklchValues.c,
+                hue: color.oklchValues.h || 0
+            }));
+            
+            const byLightness = [...parsed].sort((a, b) => b.lightness - a.lightness);
+            const byChroma = [...parsed].sort((a, b) => b.chroma - a.chroma);
+            
+            // Background: lightest or darkest
+            const background = byLightness[0].lightness > 50 ? byLightness[0] : byLightness[byLightness.length - 1];
+            const isDark = background.lightness < 50;
+            
+            // Text: highest contrast to background
+            const text = isDark ? byLightness[0] : byLightness[byLightness.length - 1];
+            
+            // Heading: most saturated with good contrast
+            const heading = byChroma.find(c => 
+                Math.abs(c.lightness - background.lightness) > 30
+            ) || byChroma[0];
+            
+            // Accent: second most saturated, different hue
+            const accent = byChroma.find(c => 
+                c.hex !== heading.hex && 
+                Math.abs(c.hue - heading.hue) > 30
+            ) || byChroma[1] || heading;
+            
+            // Muted: mid lightness, low chroma
+            const muted = parsed.find(c => 
+                c.lightness > 30 && c.lightness < 70 && c.chroma < 0.1
+            ) || parsed[Math.floor(parsed.length / 2)];
+            
+            // Link: vibrant, different from accent
+            const link = byChroma.find(c => 
+                c.hex !== accent.hex && c.chroma > 0.1
+            ) || accent;
+            
+            // Code background: subtle
+            const codeBg = isDark 
+                ? parsed.find(c => c.lightness > background.lightness && c.lightness < background.lightness + 15) || background
+                : parsed.find(c => c.lightness < background.lightness && c.lightness > background.lightness - 15) || background;
+            
+            return {
+                background,
+                backgroundSolid: background,
+                text,
+                heading,
+                accent,
+                muted,
+                link,
+                codeBg,
+                codeText: text,
+                blockquoteBorder: accent,
+                blockquoteBg: background,
+                tableBorder: muted,
+                tableHeaderBg: codeBg,
+                isDark
+            };
+        }
+        
+        // ==================== UI RENDERING ====================
+        function renderExtractedColors(colors) {
+            const container = document.getElementById('extractedColors');
+            container.innerHTML = `
+                <div class="palette-section">
+                    <div class="palette-label">Click a color to copy its value</div>
+                    <div class="palette-colors">
+                        ${colors.map(c => `
+                            <div class="color-swatch" 
+                                 style="background: ${c.hex};" 
+                                 data-hex="${c.hex}"
+                                 onclick="copyColor('${c.hex}')"
+                                 title="${c.hex}">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderVariations() {
+            const grid = document.getElementById('variationsGrid');
+            grid.innerHTML = Object.entries(currentPalettes).map(([key, palette]) => `
+                <div class="variation-card ${key === selectedVariation ? 'active' : ''}" 
+                     onclick="selectVariation('${key}')">
+                    <div class="variation-name">${palette.name}</div>
+                    <div class="variation-preview">
+                        ${palette.colors.slice(0, 6).map(c => `
+                            <span style="background: ${c.hex};"></span>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectVariation(key) {
+            selectedVariation = key;
+            assignedRoles = assignColorRoles(currentPalettes[key].colors);
+            renderVariations();
+            renderRoleMapping();
+            updateThemePreview();
+            generateExportCode();
+        }
+        
+        function renderRoleMapping() {
+            if (!assignedRoles) return;
+            
+            const container = document.getElementById('roleMapping');
+            const roles = [
+                { key: 'background', name: 'Background' },
+                { key: 'text', name: 'Text' },
+                { key: 'heading', name: 'Heading' },
+                { key: 'accent', name: 'Accent' },
+                { key: 'link', name: 'Link' },
+                { key: 'muted', name: 'Muted' },
+                { key: 'codeBg', name: 'Code BG' }
+            ];
+            
+            container.innerHTML = roles.map(role => `
+                <div class="role-item">
+                    <div class="role-color" style="background: ${assignedRoles[role.key]?.hex || '#000'}"></div>
+                    <div class="role-name">${role.name}</div>
+                    <div class="role-value">${assignedRoles[role.key]?.hex || 'N/A'}</div>
+                </div>
+            `).join('');
+        }
+        
+        function updateThemePreview() {
+            if (!assignedRoles) return;
+            
+            const preview = document.getElementById('themePreview');
+            const headingFont = document.getElementById('headingFont').value;
+            const bodyFont = document.getElementById('bodyFont').value;
+            const monoFont = document.getElementById('monoFont').value;
+            
+            preview.style.background = assignedRoles.background?.hex || '#1a1a2e';
+            preview.style.color = assignedRoles.text?.hex || '#ffffff';
+            preview.style.fontFamily = bodyFont;
+            
+            preview.querySelector('h1').style.color = assignedRoles.heading?.hex || '#ffffff';
+            preview.querySelector('h1').style.fontFamily = headingFont;
+            preview.querySelector('h2').style.color = assignedRoles.accent?.hex || '#64ffda';
+            preview.querySelector('h2').style.fontFamily = headingFont;
+            
+            const code = preview.querySelector('code');
+            code.style.background = assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.1)';
+            code.style.color = assignedRoles.codeText?.hex || '#ffffff';
+            code.style.fontFamily = monoFont;
+            
+            const blockquote = preview.querySelector('blockquote');
+            blockquote.style.borderColor = assignedRoles.accent?.hex || '#64ffda';
+            blockquote.style.color = assignedRoles.muted?.hex || '#888888';
+        }
+        
+        function updateFontPreview() {
+            document.getElementById('headingPreview').style.fontFamily = document.getElementById('headingFont').value;
+            document.getElementById('bodyPreview').style.fontFamily = document.getElementById('bodyFont').value;
+            document.getElementById('monoPreview').style.fontFamily = document.getElementById('monoFont').value;
+            
+            updateThemePreview();
+            generateExportCode();
+        }
+        
+        // ==================== EXPORT ====================
+        function generateExportCode() {
+            if (!assignedRoles) {
+                document.getElementById('exportCode').textContent = '// Select an image to generate theme code';
+                return;
+            }
+            
+            const themeName = document.getElementById('themeName').value || 'Custom Theme';
+            const themeId = themeName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            
+            const headingFont = document.getElementById('headingFont').value;
+            const bodyFont = document.getElementById('bodyFont').value;
+            const monoFont = document.getElementById('monoFont').value;
+            
+            const bg = assignedRoles.background;
+            const isDark = bg.lightness < 50;
+            
+            const code = `'${themeId}': {
+    name: '${themeName}',
+    category: '${isDark ? 'dark' : 'light'}',
+    description: 'Custom theme created with Theme Designer',
+    fonts: {
+        heading: "${headingFont}",
+        body: "${bodyFont}",
+        mono: "${monoFont}"
+    },
+    colors: {
+        background: '${bg.hex}',
+        backgroundSolid: '${bg.hex}',
+        text: '${assignedRoles.text?.hex || '#ffffff'}',
+        heading: '${assignedRoles.heading?.hex || '#ffffff'}',
+        accent: '${assignedRoles.accent?.hex || '#64ffda'}',
+        accentAlt: '${assignedRoles.link?.hex || '#ff6b6b'}',
+        muted: '${assignedRoles.muted?.hex || '#888888'}',
+        link: '${assignedRoles.link?.hex || '#64ffda'}',
+        codeBg: '${assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.1)'}',
+        codeText: '${assignedRoles.codeText?.hex || '#ffffff'}',
+        blockquoteBorder: '${assignedRoles.accent?.hex || '#64ffda'}',
+        blockquoteBg: 'rgba(${hexToRgbValues(assignedRoles.accent?.hex || '#64ffda')}, 0.1)',
+        tableBorder: '${assignedRoles.muted?.hex || '#333333'}',
+        tableHeaderBg: '${assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.05)'}'
+    }
+}`;
+            
+            document.getElementById('exportCode').textContent = code;
+        }
+        
+        function hexToRgbValues(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!result) return '255, 255, 255';
+            return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+        }
+        
+        function copyThemeCode() {
+            const code = document.getElementById('exportCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Theme code copied to clipboard!');
+            });
+        }
+        
+        function downloadTheme() {
+            const code = document.getElementById('exportCode').textContent;
+            const themeName = document.getElementById('themeName').value || 'custom-theme';
+            const filename = themeName.toLowerCase().replace(/\s+/g, '-') + '.js';
+            
+            const blob = new Blob([`// Work Suite Theme\n// Add this to content-themes.js\n\n${code}`], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Theme downloaded!');
+        }
+        
+        function exportTheme() {
+            downloadTheme();
+        }
+        
+        function copyColor(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                showToast(`Copied: ${hex}`);
+            });
+        }
+        
+        // ==================== GOOGLE FONTS ====================
+        function loadGoogleFonts() {
+            const fonts = [
+                'Space+Grotesk:wght@400;500;600;700',
+                'Playfair+Display:wght@400;500;600;700',
+                'Montserrat:wght@400;500;600;700',
+                'Merriweather:wght@400;700',
+                'Poppins:wght@400;500;600;700',
+                'Crimson+Pro:wght@400;600',
+                'Outfit:wght@400;500;600;700',
+                'Libre+Baskerville:wght@400;700',
+                'DM+Sans:wght@400;500;600;700',
+                'Lora:wght@400;600',
+                'Source+Sans+3:wght@400;500;600',
+                'Open+Sans:wght@400;500;600',
+                'Lato:wght@400;700',
+                'Nunito:wght@400;600;700',
+                'IBM+Plex+Sans:wght@400;500;600',
+                'Roboto:wght@400;500;700',
+                'Work+Sans:wght@400;500;600',
+                'Mulish:wght@400;600;700',
+                'Karla:wght@400;500;600',
+                'Fira+Code:wght@400;500',
+                'Source+Code+Pro:wght@400;500',
+                'IBM+Plex+Mono:wght@400;500',
+                'Roboto+Mono:wght@400;500',
+                'Ubuntu+Mono:wght@400'
+            ];
+            
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${fonts.join('&family=')}&display=swap`;
+            document.head.appendChild(link);
+        }
+        
+        // ==================== UTILITIES ====================
+        function showToast(message) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+        
+        // Theme name change listener
+        document.getElementById('themeName').addEventListener('input', generateExportCode);
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
+

@@ -356,6 +356,110 @@
             color: var(--text);
         }
         
+        /* Selection Toolbar */
+        .selection-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            animation: slideDown 0.2s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .selection-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .selection-info input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+        
+        .selection-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .selection-actions .action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+        
+        .selection-actions .action-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+        
+        .selection-actions .action-btn.danger {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .selection-actions .action-btn.danger:hover {
+            background: #ef444420;
+        }
+        
+        /* File Checkbox */
+        .file-checkbox {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        
+        .file-card:hover .file-checkbox,
+        .file-card.multi-selected .file-checkbox,
+        .file-row:hover .file-checkbox,
+        .file-row.multi-selected .file-checkbox,
+        .selection-toolbar:not([style*="display: none"]) ~ #fileContainer .file-checkbox {
+            opacity: 1;
+        }
+        
+        .file-checkbox:checked {
+            opacity: 1;
+        }
+        
+        .file-card.multi-selected,
+        .file-row.multi-selected {
+            border-color: var(--accent);
+            background: var(--accent-bg, rgba(59, 130, 246, 0.1));
+        }
+        
+        /* Row checkbox positioning */
+        .file-row .file-checkbox {
+            position: relative;
+            top: auto;
+            left: auto;
+            margin-right: 12px;
+            opacity: 1;
+        }
+        
         /* File Grid */
         .file-grid {
             display: grid;
@@ -900,6 +1004,20 @@
                 </div>
             </div>
             
+            <!-- Selection Toolbar -->
+            <div id="selectionToolbar" class="selection-toolbar" style="display: none;">
+                <div class="selection-info">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" />
+                    <span id="selectionCount">0 selected</span>
+                </div>
+                <div class="selection-actions">
+                    <button class="action-btn" onclick="bulkChangeStatus('done')">✅ Mark Done</button>
+                    <button class="action-btn" onclick="bulkChangeStatus('in-progress')">🔄 In Progress</button>
+                    <button class="action-btn danger" onclick="bulkDelete()">🗑️ Delete</button>
+                    <button class="action-btn" onclick="clearSelection()">✕ Clear</button>
+                </div>
+            </div>
+            
             <div id="fileContainer" class="file-grid">
                 <!-- Files rendered here -->
             </div>
@@ -928,6 +1046,8 @@
         let currentFilter = { type: 'all', value: 'all' };
         let currentView = 'grid';
         let selectedFile = null;
+        let selectedFiles = new Set(); // Multi-select
+        let lastSelectedIndex = -1; // For shift-click range selection
         
         // App type info
         const appTypes = {
@@ -1270,11 +1390,15 @@
             const app = appTypes[file.type];
             const scopeClass = file.scope;
             const statusClass = file.status.replace('-', '');
+            const isMultiSelected = selectedFiles.has(file.id);
             
             return `
-                <div class="file-card ${selectedFile?.id === file.id ? 'selected' : ''}" 
-                     onclick="selectFile('${file.id}')" 
+                <div class="file-card ${selectedFile?.id === file.id ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''}" 
+                     onclick="handleFileClick(event, '${file.id}')" 
                      ondblclick="openFile('${file.id}')">
+                    <input type="checkbox" class="file-checkbox" 
+                           ${isMultiSelected ? 'checked' : ''} 
+                           onclick="event.stopPropagation(); toggleFileSelection('${file.id}')" />
                     <button class="open-btn" onclick="event.stopPropagation(); openFile('${file.id}')">
                         Open ${app.icon}
                     </button>
@@ -1303,11 +1427,15 @@
         
         function renderFileRow(file) {
             const app = appTypes[file.type];
+            const isMultiSelected = selectedFiles.has(file.id);
             
             return `
-                <div class="file-row ${selectedFile?.id === file.id ? 'selected' : ''}" 
-                     onclick="selectFile('${file.id}')"
+                <div class="file-row ${selectedFile?.id === file.id ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''}" 
+                     onclick="handleFileClick(event, '${file.id}')"
                      ondblclick="openFile('${file.id}')">
+                    <input type="checkbox" class="file-checkbox" 
+                           ${isMultiSelected ? 'checked' : ''} 
+                           onclick="event.stopPropagation(); toggleFileSelection('${file.id}')" />
                     <div class="file-icon ${file.type}">${app.icon}</div>
                     <div class="file-name">${escapeHtml(file.name)}</div>
                     <div class="file-tags">
@@ -1510,6 +1638,150 @@
             if (selectedFile) {
                 renderDetails(selectedFile);
             }
+        }
+        
+        // ==================== MULTI-SELECT ====================
+        function handleFileClick(event, id) {
+            const filteredFiles = getFilteredFiles();
+            const fileIndex = filteredFiles.findIndex(f => f.id === id);
+            
+            if (event.shiftKey && lastSelectedIndex >= 0) {
+                // Shift+click: Select range
+                const start = Math.min(lastSelectedIndex, fileIndex);
+                const end = Math.max(lastSelectedIndex, fileIndex);
+                
+                for (let i = start; i <= end; i++) {
+                    selectedFiles.add(filteredFiles[i].id);
+                }
+                updateSelectionUI();
+                renderFiles();
+            } else if (event.ctrlKey || event.metaKey) {
+                // Ctrl/Cmd+click: Toggle selection
+                toggleFileSelection(id);
+                lastSelectedIndex = fileIndex;
+            } else {
+                // Normal click: Select single file (old behavior)
+                selectFile(id);
+                lastSelectedIndex = fileIndex;
+            }
+        }
+        
+        function toggleFileSelection(id) {
+            if (selectedFiles.has(id)) {
+                selectedFiles.delete(id);
+            } else {
+                selectedFiles.add(id);
+            }
+            updateSelectionUI();
+            renderFiles();
+        }
+        
+        function toggleSelectAll() {
+            const filteredFiles = getFilteredFiles();
+            const checkbox = document.getElementById('selectAllCheckbox');
+            
+            if (checkbox.checked) {
+                filteredFiles.forEach(f => selectedFiles.add(f.id));
+            } else {
+                selectedFiles.clear();
+            }
+            updateSelectionUI();
+            renderFiles();
+        }
+        
+        function clearSelection() {
+            selectedFiles.clear();
+            lastSelectedIndex = -1;
+            updateSelectionUI();
+            renderFiles();
+        }
+        
+        function updateSelectionUI() {
+            const toolbar = document.getElementById('selectionToolbar');
+            const countSpan = document.getElementById('selectionCount');
+            const checkbox = document.getElementById('selectAllCheckbox');
+            const filteredFiles = getFilteredFiles();
+            
+            if (selectedFiles.size > 0) {
+                toolbar.style.display = 'flex';
+                countSpan.textContent = `${selectedFiles.size} selected`;
+                checkbox.checked = selectedFiles.size === filteredFiles.length;
+                checkbox.indeterminate = selectedFiles.size > 0 && selectedFiles.size < filteredFiles.length;
+            } else {
+                toolbar.style.display = 'none';
+            }
+        }
+        
+        async function bulkDelete() {
+            const count = selectedFiles.size;
+            if (count === 0) return;
+            
+            if (!confirm(`Delete ${count} file${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
+            
+            const idsToDelete = Array.from(selectedFiles);
+            let deletedCount = 0;
+            let failedCount = 0;
+            
+            for (const id of idsToDelete) {
+                try {
+                    // Try to delete from API
+                    const response = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        deletedCount++;
+                    } else {
+                        failedCount++;
+                    }
+                } catch (e) {
+                    failedCount++;
+                }
+                
+                // Also remove from local state
+                files = files.filter(f => f.id !== id);
+            }
+            
+            // Clear selection and update UI
+            selectedFiles.clear();
+            selectedFile = null;
+            saveToLocalStorage();
+            updateSelectionUI();
+            renderFiles();
+            updateCounts();
+            closeDetails();
+            
+            if (failedCount > 0) {
+                showToast(`Deleted ${deletedCount} files (${failedCount} failed)`);
+            } else {
+                showToast(`Deleted ${deletedCount} file${deletedCount > 1 ? 's' : ''}`);
+            }
+        }
+        
+        async function bulkChangeStatus(status) {
+            const count = selectedFiles.size;
+            if (count === 0) return;
+            
+            for (const id of selectedFiles) {
+                const file = files.find(f => f.id === id);
+                if (file) {
+                    file.status = status;
+                    file.updatedAt = Date.now();
+                    
+                    // Try to update via API
+                    try {
+                        await fetch(`/api/items/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status })
+                        });
+                    } catch (e) {
+                        // Continue even if API fails
+                    }
+                }
+            }
+            
+            saveToLocalStorage();
+            renderFiles();
+            updateCounts();
+            showToast(`Updated ${count} file${count > 1 ? 's' : ''} to ${formatStatus(status)}`);
         }
         
         function openFile(id) {

@@ -2,8 +2,6 @@
 # Storage: /zfs/data/work_suite (ZFS on seed)
 # Ports: 8500-8501
 
-version: '3.8'
-
 services:
   # ===========================================
   # Work Suite Web App (Static Frontend)

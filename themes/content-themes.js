@@ -638,10 +638,141 @@ const WorkSuiteThemes = (function() {
         }
     }
 
+    // ==================== CUSTOM THEMES ====================
+    
+    const CUSTOM_THEMES_KEY = 'worksuite-custom-themes';
+    let customThemes = {};
+    
+    /**
+     * Load custom themes from localStorage
+     */
+    function loadCustomThemes() {
+        try {
+            const saved = localStorage.getItem(CUSTOM_THEMES_KEY);
+            if (saved) {
+                customThemes = JSON.parse(saved);
+                // Register custom themes in the themes object
+                Object.entries(customThemes).forEach(([id, theme]) => {
+                    themes[id] = normalizeCustomTheme(theme);
+                });
+            }
+        } catch (e) {
+            console.warn('Could not load custom themes:', e);
+        }
+        return customThemes;
+    }
+    
+    /**
+     * Normalize a custom theme to match the expected format
+     */
+    function normalizeCustomTheme(theme) {
+        // Convert colors from {hex, lightness, ...} format to just hex strings
+        const colors = {};
+        if (theme.colors) {
+            Object.entries(theme.colors).forEach(([key, value]) => {
+                colors[key] = typeof value === 'object' && value.hex ? value.hex : value;
+            });
+        }
+        
+        // Ensure required color properties exist
+        const normalizedColors = {
+            background: colors.background || colors.backgroundSolid || '#1a1a2e',
+            backgroundSolid: colors.backgroundSolid || colors.background || '#1a1a2e',
+            text: colors.text || '#e8e8e8',
+            heading: colors.heading || colors.text || '#ffffff',
+            accent: colors.accent || '#6366f1',
+            accentAlt: colors.accentAlt || colors.accent || '#818cf8',
+            muted: colors.muted || '#8888a0',
+            link: colors.link || colors.accent || '#64ffda',
+            codeBg: colors.codeBg || 'rgba(255, 255, 255, 0.08)',
+            codeText: colors.codeText || colors.text || '#e8e8e8',
+            blockquoteBorder: colors.blockquoteBorder || colors.accent || '#6366f1',
+            blockquoteBg: colors.blockquoteBg || 'rgba(99, 102, 241, 0.1)',
+            tableBorder: colors.tableBorder || '#2a2a4a',
+            tableHeaderBg: colors.tableHeaderBg || 'rgba(255, 255, 255, 0.05)'
+        };
+        
+        return {
+            name: theme.name || 'Custom Theme',
+            category: 'custom',
+            description: 'Custom theme created in Theme Designer',
+            fonts: {
+                heading: theme.fonts?.heading || "'Space Grotesk', sans-serif",
+                body: theme.fonts?.body || "'Inter', sans-serif",
+                mono: theme.fonts?.mono || "'JetBrains Mono', monospace"
+            },
+            colors: normalizedColors,
+            styles: {
+                headingWeight: theme.styles?.headingWeight || 700,
+                headingLetterSpacing: theme.styles?.headingLetterSpacing || '-0.02em',
+                bodyLineHeight: theme.styles?.bodyLineHeight || 1.7,
+                paragraphSpacing: theme.styles?.paragraphSpacing || '1.25em',
+                borderRadius: theme.styles?.borderRadius || '8px'
+            }
+        };
+    }
+    
+    /**
+     * Save a custom theme to localStorage
+     */
+    function saveCustomTheme(theme) {
+        if (!theme || !theme.id) {
+            console.error('Invalid theme: missing id');
+            return false;
+        }
+        
+        try {
+            // Load existing custom themes
+            loadCustomThemes();
+            
+            // Save the raw theme data
+            customThemes[theme.id] = theme;
+            localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(customThemes));
+            
+            // Register normalized version in themes object
+            themes[theme.id] = normalizeCustomTheme(theme);
+            
+            console.log('Custom theme saved:', theme.id);
+            return true;
+        } catch (e) {
+            console.error('Could not save custom theme:', e);
+            return false;
+        }
+    }
+    
+    /**
+     * Delete a custom theme
+     */
+    function deleteCustomTheme(themeId) {
+        try {
+            loadCustomThemes();
+            if (customThemes[themeId]) {
+                delete customThemes[themeId];
+                delete themes[themeId];
+                localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(customThemes));
+                return true;
+            }
+        } catch (e) {
+            console.error('Could not delete custom theme:', e);
+        }
+        return false;
+    }
+    
+    /**
+     * Get all custom themes
+     */
+    function getCustomThemes() {
+        loadCustomThemes();
+        return { ...customThemes };
+    }
+
     /**
      * Initialize with saved preference
      */
     function init(container) {
+        // Load custom themes first
+        loadCustomThemes();
+        
         const savedTheme = loadPreference();
         loadFonts(savedTheme);
         if (container) {
@@ -665,6 +796,10 @@ const WorkSuiteThemes = (function() {
         loadFonts,
         savePreference,
         loadPreference,
+        loadCustomThemes,
+        saveCustomTheme,
+        deleteCustomTheme,
+        getCustomThemes,
         init
     };
 

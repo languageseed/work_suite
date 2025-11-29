@@ -1688,7 +1688,7 @@ ${preview.innerHTML}
         }
 
         // ==================== Initialize ====================
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             // Load app theme
             initTheme();
             
@@ -1699,9 +1699,9 @@ ${preview.innerHTML}
             const urlParams = new URLSearchParams(window.location.search);
             const tagsId = urlParams.get('tags_id');
             
-            if (tagsId && loadFromTags(tagsId)) {
-                // Loaded from Tags
-                return;
+            if (tagsId) {
+                const loaded = await loadFromTags(tagsId);
+                if (loaded) return;
             }
             
             // Load saved content

@@ -1211,15 +1211,16 @@
         boardTitle.addEventListener('input', saveToLocalStorage);
 
         // ==================== INIT ====================
-        function init() {
+        async function init() {
             loadFromLocalStorage();
             
             // Check if opened from Tags
             const urlParams = new URLSearchParams(window.location.search);
             const tagsId = urlParams.get('tags_id');
             
-            if (tagsId && loadFromTags(tagsId)) {
-                return;
+            if (tagsId) {
+                const loaded = await loadFromTags(tagsId);
+                if (loaded) return;
             }
             
             // Add sample data if empty

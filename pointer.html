@@ -737,22 +737,15 @@
             transform: translateX(-50%);
             font-size: 8px;
             font-weight: 600;
-            color: inherit;
+            color: white;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             padding: 2px 6px;
             border-radius: 3px;
         }
 
-        .theme-midnight { background: linear-gradient(135deg, #0f0f23, #1a1a3e); color: #fff; }
-        .theme-aurora { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: #64ffda; }
-        .theme-sunset { background: linear-gradient(135deg, #2d1b3d, #6b2d5b); color: #ffb347; }
-        .theme-ocean { background: linear-gradient(135deg, #0c2340, #13678a); color: #4dd0e1; }
-        .theme-forest { background: linear-gradient(135deg, #1a2f1a, #2d4a2d); color: #81c784; }
-        .theme-minimal { background: #fafafa; color: #333; }
-        .theme-paper { background: linear-gradient(135deg, #f5f5dc, #faf8ef); color: #3d3d3d; }
-        .theme-neon { background: linear-gradient(135deg, #0a0a0a, #1a0a2e); color: #ff00ff; }
+        /* Theme backgrounds are set inline by JavaScript */
 
         /* ==================== PRESENTATION MODE ==================== */
         .presentation-mode {
@@ -1254,17 +1247,25 @@
         }
 
         function renderThemeGrid() {
-            if (typeof WorkSuiteThemes === 'undefined') return;
+            const grid = document.getElementById('themeGrid');
             
-            const themeGrid = document.getElementById('themeGrid');
+            if (typeof WorkSuiteThemes === 'undefined') {
+                // Fallback if themes script not loaded
+                grid.innerHTML = '<div style="color: var(--chrome-text-muted); font-size: 12px; padding: 8px;">Theme system loading...</div>';
+                // Retry after a moment
+                setTimeout(renderThemeGrid, 500);
+                return;
+            }
+            
             const themes = WorkSuiteThemes.getThemes();
             
-            themeGrid.innerHTML = themes.map(theme => `
+            grid.innerHTML = themes.map(theme => `
                 <div class="theme-option ${theme.id === currentTheme ? 'active' : ''}" 
                      data-theme="${theme.id}" 
                      data-name="${theme.name}"
                      onclick="setTheme('${theme.id}')"
-                     style="background: ${theme.colors.background}; color: ${theme.colors.heading};">
+                     title="${theme.name}"
+                     style="background: ${theme.colors.backgroundSolid};">
                 </div>
             `).join('');
         }

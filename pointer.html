@@ -733,6 +733,26 @@
 
         .theme-option.active {
             border-color: var(--chrome-accent);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.4), 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.05);
+        }
+        
+        .theme-option.active::before {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: var(--chrome-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            z-index: 1;
         }
 
         .theme-option::after {

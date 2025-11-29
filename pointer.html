@@ -801,36 +801,36 @@
         }
         
         .presentation-mode .slide-content {
-            /* Scale content proportionally to viewport */
-            /* Base design is 960px wide, so scale = 100vw / 960px */
-            font-size: calc(16px * (100vw / 960));
-            padding: calc(48px * (100vw / 960)) calc(64px * (100vw / 960));
+            /* Scale content proportionally to viewport using vw units */
+            /* Base: 960px design width, so 1px = 0.104vw (100/960) */
+            font-size: 1.67vw; /* 16px at 960px = 1.67vw */
+            padding: 5vw 6.67vw; /* 48px/64px at 960px */
         }
         
         .presentation-mode .slide-content h1 {
-            font-size: calc(3.5rem * (100vw / 960));
+            font-size: 5.8vw; /* ~56px at 960px */
         }
         
         .presentation-mode .slide-content h2 {
-            font-size: calc(2.5rem * (100vw / 960));
+            font-size: 4.2vw; /* ~40px at 960px */
         }
         
         .presentation-mode .slide-content h3 {
-            font-size: calc(2rem * (100vw / 960));
+            font-size: 3.3vw; /* ~32px at 960px */
         }
         
         .presentation-mode .slide-content p,
         .presentation-mode .slide-content li {
-            font-size: calc(1.5rem * (100vw / 960));
+            font-size: 2.5vw; /* ~24px at 960px */
         }
         
         .presentation-mode .slide-content pre,
         .presentation-mode .slide-content code {
-            font-size: calc(1.1rem * (100vw / 960));
+            font-size: 1.8vw; /* ~17px at 960px */
         }
         
         .presentation-mode .slide-content blockquote {
-            font-size: calc(1.8rem * (100vw / 960));
+            font-size: 3vw; /* ~29px at 960px */
         }
         
         .presentation-mode .slide-content img {

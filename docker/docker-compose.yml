@@ -44,7 +44,7 @@ services:
       # Authentik OAuth2 Configuration
       - AUTHENTIK_URL=${AUTHENTIK_URL:-http://192.168.0.110:9500}
       - AUTHENTIK_CLIENT_ID=${AUTHENTIK_CLIENT_ID:-work-suite}
-      - AUTHENTIK_CLIENT_SECRET=${AUTHENTIK_CLIENT_SECRET}
+      - AUTHENTIK_CLIENT_SECRET=${AUTHENTIK_CLIENT_SECRET:-fe3f8fb2a9ea4bcc5c59a16e63fd655a5d2398c846b7efab}
       - AUTHENTIK_CALLBACK_URL=${AUTHENTIK_CALLBACK_URL:-http://192.168.0.110:8500/api/auth/callback}
       - FRONTEND_URL=${FRONTEND_URL:-http://192.168.0.110:8500}
       # Service-0 Core Platform Integration
@@ -52,8 +52,6 @@ services:
       - SECURE_COOKIES=${SECURE_COOKIES:-false}
     volumes:
       - /zfs/data/work_suite:/data
-    env_file:
-      - /zfs/data/work_suite/.env.auth
     networks:
       - worksuite-net
     healthcheck:

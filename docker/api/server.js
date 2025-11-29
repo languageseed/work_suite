@@ -117,6 +117,18 @@ db.exec(`
     );
 `);
 
+// Migration: Add workspace columns if they don't exist
+try {
+    db.exec('ALTER TABLE items ADD COLUMN workspace_id TEXT');
+} catch (e) {
+    // Column already exists, ignore
+}
+try {
+    db.exec('ALTER TABLE items ADD COLUMN service0_object_id TEXT');
+} catch (e) {
+    // Column already exists, ignore
+}
+
 // ===========================================
 // Express App Setup
 // ===========================================

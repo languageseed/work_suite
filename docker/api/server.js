@@ -36,6 +36,131 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://192.168.0.110:8500';
 const SERVICE_0_URL = process.env.SERVICE_0_URL || 'http://192.168.0.110:8001';
 
 // ===========================================
+// Service-0 Integration Helpers
+// ===========================================
+
+/**
+ * Fetch user's workspaces from Service-0
+ */
+async function fetchWorkspaces(userId) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/users/${userId}/workspaces`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (err) {
+        console.error('Failed to fetch workspaces from Service-0:', err.message);
+    }
+    return [];
+}
+
+/**
+ * Create a workspace in Service-0
+ */
+async function createWorkspace(name, ownerId, type = 'personal', description = null) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/workspaces`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, owner_id: ownerId, type, description })
+        });
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (err) {
+        console.error('Failed to create workspace in Service-0:', err.message);
+    }
+    return null;
+}
+
+/**
+ * Register an item as a shared object in Service-0
+ */
+async function registerObject(workspaceId, item) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/objects`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                workspace_id: workspaceId,
+                object_type: item.type || 'file',
+                source_service: 'work-suite',
+                source_id: item.id,
+                name: item.name,
+                metadata: {
+                    app: item.app,
+                    scope: item.scope,
+                    status: item.status,
+                    folder: item.folder
+                }
+            })
+        });
+        if (response.ok) {
+            const obj = await response.json();
+            return obj.object_id;
+        }
+    } catch (err) {
+        console.error('Failed to register object in Service-0:', err.message);
+    }
+    return null;
+}
+
+/**
+ * Update an object in Service-0
+ */
+async function updateObject(objectId, item) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/objects/${objectId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: item.name,
+                metadata: {
+                    app: item.app,
+                    scope: item.scope,
+                    status: item.status,
+                    folder: item.folder
+                }
+            })
+        });
+        return response.ok;
+    } catch (err) {
+        console.error('Failed to update object in Service-0:', err.message);
+    }
+    return false;
+}
+
+/**
+ * Delete an object from Service-0
+ */
+async function deleteObject(objectId) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/objects/${objectId}`, {
+            method: 'DELETE'
+        });
+        return response.ok;
+    } catch (err) {
+        console.error('Failed to delete object from Service-0:', err.message);
+    }
+    return false;
+}
+
+/**
+ * Get objects in a workspace from Service-0
+ */
+async function fetchWorkspaceObjects(workspaceId) {
+    try {
+        const response = await fetch(`${SERVICE_0_URL}/api/v1/objects?workspace_id=${workspaceId}`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (err) {
+        console.error('Failed to fetch workspace objects from Service-0:', err.message);
+    }
+    return [];
+}
+
+// ===========================================
 // Initialize Storage Directories
 // ===========================================
 const SCOPES = ['me', 'us', 'we', 'there'];
@@ -694,7 +819,7 @@ app.get('/items', optionalAuth, (req, res) => {
     }
 });
 
-app.post('/items', optionalAuth, (req, res) => {
+app.post('/items', optionalAuth, async (req, res) => {
     try {
         const { name, type, app, scope, folder, status, content, tags, workspace_id } = req.body;
         const id = uuidv4();
@@ -717,27 +842,52 @@ app.post('/items', optionalAuth, (req, res) => {
             });
         }
         
-        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(id);
+        let item = db.prepare('SELECT * FROM items WHERE id = ?').get(id);
+        
+        // If workspace provided, register with Service-0
+        if (workspace_id && req.user) {
+            const objectId = await registerObject(workspace_id, item);
+            if (objectId) {
+                db.prepare('UPDATE items SET service0_object_id = ? WHERE id = ?').run(objectId, id);
+                item = db.prepare('SELECT * FROM items WHERE id = ?').get(id);
+            }
+        }
+        
         res.json(item);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-app.put('/items/:id', optionalAuth, (req, res) => {
+app.put('/items/:id', optionalAuth, async (req, res) => {
     try {
-        const { name, scope, folder, status, content, tags } = req.body;
+        const { name, scope, folder, status, content, tags, workspace_id } = req.body;
         
-        db.prepare(`
-            UPDATE items 
-            SET name = COALESCE(?, name),
-                scope = COALESCE(?, scope),
-                folder = COALESCE(?, folder),
-                status = COALESCE(?, status),
-                content = COALESCE(?, content),
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `).run(name, scope, folder, status, content, req.params.id);
+        // Update workspace_id if provided
+        if (workspace_id !== undefined) {
+            db.prepare(`
+                UPDATE items 
+                SET name = COALESCE(?, name),
+                    scope = COALESCE(?, scope),
+                    folder = COALESCE(?, folder),
+                    status = COALESCE(?, status),
+                    content = COALESCE(?, content),
+                    workspace_id = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `).run(name, scope, folder, status, content, workspace_id, req.params.id);
+        } else {
+            db.prepare(`
+                UPDATE items 
+                SET name = COALESCE(?, name),
+                    scope = COALESCE(?, scope),
+                    folder = COALESCE(?, folder),
+                    status = COALESCE(?, status),
+                    content = COALESCE(?, content),
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `).run(name, scope, folder, status, content, req.params.id);
+        }
         
         // Update tags if provided
         if (tags) {
@@ -754,21 +904,35 @@ app.put('/items/:id', optionalAuth, (req, res) => {
         }
         
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
+        
+        // Sync with Service-0 if item has an object ID
+        if (item.service0_object_id) {
+            await updateObject(item.service0_object_id, item);
+        }
+        
         res.json(item);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-app.delete('/items/:id', optionalAuth, (req, res) => {
+app.delete('/items/:id', optionalAuth, async (req, res) => {
     try {
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
+        
+        // Delete file if exists
         if (item?.file_path) {
             const fullPath = path.join(FILES_PATH, item.file_path);
             if (fs.existsSync(fullPath)) {
                 fs.unlinkSync(fullPath);
             }
         }
+        
+        // Delete from Service-0 if registered
+        if (item?.service0_object_id) {
+            await deleteObject(item.service0_object_id);
+        }
+        
         db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id);
         res.json({ success: true });
     } catch (err) {
@@ -800,6 +964,111 @@ app.post('/upload', upload.single('file'), (req, res) => {
         
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(id);
         res.json(item);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ===========================================
+// Workspace Routes (Service-0 Integration)
+// ===========================================
+
+// Get user's workspaces
+app.get('/workspaces', auth, async (req, res) => {
+    try {
+        const workspaces = await fetchWorkspaces(req.user.id);
+        res.json(workspaces);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create a new workspace
+app.post('/workspaces', auth, async (req, res) => {
+    try {
+        const { name, type, description } = req.body;
+        const workspace = await createWorkspace(name, req.user.id, type, description);
+        if (workspace) {
+            res.status(201).json(workspace);
+        } else {
+            res.status(500).json({ error: 'Failed to create workspace' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get items in a workspace
+app.get('/workspaces/:workspaceId/items', optionalAuth, async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+        
+        // Get items from local database
+        const items = db.prepare(`
+            SELECT * FROM items WHERE workspace_id = ? ORDER BY updated_at DESC
+        `).all(workspaceId);
+        
+        // Attach tags
+        const getTagsStmt = db.prepare(`
+            SELECT t.* FROM tags t
+            JOIN item_tags it ON t.id = it.tag_id
+            WHERE it.item_id = ?
+        `);
+        
+        const itemsWithTags = items.map(item => ({
+            ...item,
+            tags: getTagsStmt.all(item.id)
+        }));
+        
+        res.json(itemsWithTags);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Sync item to workspace (register as Service-0 object)
+app.post('/workspaces/:workspaceId/items/:itemId/sync', auth, async (req, res) => {
+    try {
+        const { workspaceId, itemId } = req.params;
+        
+        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+        if (!item) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+        
+        // Register with Service-0
+        const objectId = await registerObject(workspaceId, item);
+        
+        if (objectId) {
+            // Update local item with workspace and object reference
+            db.prepare(`
+                UPDATE items 
+                SET workspace_id = ?, service0_object_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `).run(workspaceId, objectId, itemId);
+            
+            const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+            res.json(updatedItem);
+        } else {
+            // Still update local workspace_id even if Service-0 registration fails
+            db.prepare(`
+                UPDATE items SET workspace_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+            `).run(workspaceId, itemId);
+            
+            const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
+            res.json(updatedItem);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get shared objects from all DOCeater services in a workspace
+app.get('/workspaces/:workspaceId/objects', auth, async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+        const objects = await fetchWorkspaceObjects(workspaceId);
+        res.json(objects);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

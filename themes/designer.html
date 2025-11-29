@@ -375,37 +375,43 @@
         
         .theme-preview {
             border-radius: 12px;
-            padding: 24px;
-            min-height: 300px;
+            padding: 32px;
+            min-height: 380px;
         }
         
         .theme-preview h1 {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            font-size: 28px;
         }
         
         .theme-preview h2 {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            font-size: 20px;
             opacity: 0.9;
         }
         
         .theme-preview p {
             margin-bottom: 16px;
-            opacity: 0.8;
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.85;
         }
         
         .theme-preview code {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+            font-size: 12px;
         }
         
         .theme-preview blockquote {
-            border-left: 4px solid;
-            padding-left: 16px;
+            border-left: 3px solid;
+            padding-left: 12px;
             margin: 16px 0;
             font-style: italic;
+            font-size: 13px;
+            opacity: 0.8;
         }
         
         /* Theme Name Input */
@@ -573,6 +579,49 @@
             color: white;
         }
         
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .pagination-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .pagination-info {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 60px;
+            text-align: center;
+        }
+        
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -621,14 +670,13 @@
             <input type="file" id="fileInput" accept="image/*" hidden onchange="handleImageUpload(event)">
             
             <div class="sidebar-title">📸 Sample Images</div>
-            <div class="category-tabs" id="categoryTabs">
-                <button class="category-tab active" data-category="all">All</button>
-                <button class="category-tab" data-category="nature">Nature</button>
-                <button class="category-tab" data-category="abstract">Abstract</button>
-                <button class="category-tab" data-category="sunset">Sunset</button>
-            </div>
             <div class="image-grid" id="imageGrid">
-                <div class="loading"><div class="spinner"></div> Loading...</div>
+                <!-- Images rendered by JS -->
+            </div>
+            <div class="pagination" id="pagination">
+                <button class="pagination-btn" onclick="prevPage()" id="prevBtn" disabled>◀</button>
+                <span class="pagination-info" id="pageInfo">1 / 1</span>
+                <button class="pagination-btn" onclick="nextPage()" id="nextBtn">▶</button>
             </div>
         </aside>
         
@@ -750,6 +798,10 @@
         let currentPalettes = null;
         let assignedRoles = null;
         
+        // Pagination state
+        let currentPage = 0;
+        const imagesPerPage = 6;
+        
         // Sample images from the images folder
         const sampleImages = [
             'ameer-basheer-Xrx3WWyrwes-unsplash.jpg',
@@ -828,21 +880,45 @@
         
         function renderImageGrid() {
             const grid = document.getElementById('imageGrid');
-            grid.innerHTML = sampleImages.map(img => `
+            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
+            const start = currentPage * imagesPerPage;
+            const end = start + imagesPerPage;
+            const pageImages = sampleImages.slice(start, end);
+            
+            grid.innerHTML = pageImages.map(img => `
                 <div class="image-thumb" onclick="selectImage('images/${img}')" data-src="images/${img}">
                     <img src="images/${img}" alt="${img}" loading="lazy">
                 </div>
             `).join('');
+            
+            // Update pagination controls
+            updatePagination();
+        }
+        
+        function updatePagination() {
+            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
+            document.getElementById('pageInfo').textContent = `${currentPage + 1} / ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 0;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+        }
+        
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderImageGrid();
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                renderImageGrid();
+            }
         }
         
         function setupCategoryTabs() {
-            document.querySelectorAll('.category-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    // Filter logic would go here
-                });
-            });
+            // Category filtering removed for simplicity with pagination
         }
         
         // ==================== IMAGE HANDLING ====================

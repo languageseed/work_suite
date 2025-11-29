@@ -396,7 +396,7 @@ app.get('/health', (req, res) => {
 // ===========================================
 // Auth Routes
 // ===========================================
-app.post('/auth/register', async (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, displayName } = req.body;
         const id = uuidv4();
@@ -414,7 +414,7 @@ app.post('/auth/register', async (req, res) => {
     }
 });
 
-app.post('/auth/login', async (req, res) => {
+app.post('/api/auth/login-local', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
@@ -815,7 +815,7 @@ app.post('/api/sync-user', auth, async (req, res) => {
 // Items (Files/Content) Routes
 // ===========================================
 // Get single item by ID
-app.get('/items/:id', optionalAuth, (req, res) => {
+app.get('/api/items/:id', optionalAuth, (req, res) => {
     try {
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
         
@@ -839,7 +839,7 @@ app.get('/items/:id', optionalAuth, (req, res) => {
     }
 });
 
-app.get('/items', optionalAuth, (req, res) => {
+app.get('/api/items', optionalAuth, (req, res) => {
     try {
         const { scope, folder, status, app, tag, workspace_id } = req.query;
         let query = 'SELECT * FROM items WHERE 1=1';
@@ -895,7 +895,7 @@ app.get('/items', optionalAuth, (req, res) => {
     }
 });
 
-app.post('/items', optionalAuth, async (req, res) => {
+app.post('/api/items', optionalAuth, async (req, res) => {
     try {
         const { name, type, app, scope, folder, status, content, tags, workspace_id } = req.body;
         const id = uuidv4();
@@ -935,7 +935,7 @@ app.post('/items', optionalAuth, async (req, res) => {
     }
 });
 
-app.put('/items/:id', optionalAuth, async (req, res) => {
+app.put('/api/items/:id', optionalAuth, async (req, res) => {
     try {
         const { name, scope, folder, status, content, tags, workspace_id } = req.body;
         
@@ -992,7 +992,7 @@ app.put('/items/:id', optionalAuth, async (req, res) => {
     }
 });
 
-app.delete('/items/:id', optionalAuth, async (req, res) => {
+app.delete('/api/items/:id', optionalAuth, async (req, res) => {
     try {
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
         
@@ -1019,7 +1019,7 @@ app.delete('/items/:id', optionalAuth, async (req, res) => {
 // ===========================================
 // File Upload
 // ===========================================
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/api/upload', upload.single('file'), (req, res) => {
     try {
         const { scope, folder, name, app } = req.body;
         const id = uuidv4();
@@ -1051,7 +1051,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 // ===========================================
 // Tags Routes
 // ===========================================
-app.get('/tags', (req, res) => {
+app.get('/api/tags', (req, res) => {
     try {
         const tags = db.prepare('SELECT * FROM tags ORDER BY name').all();
         res.json(tags);
@@ -1063,7 +1063,7 @@ app.get('/tags', (req, res) => {
 // ===========================================
 // Themes Routes
 // ===========================================
-app.get('/themes', optionalAuth, (req, res) => {
+app.get('/api/themes', optionalAuth, (req, res) => {
     try {
         let query = 'SELECT * FROM themes WHERE is_public = 1';
         if (req.user) {
@@ -1078,7 +1078,7 @@ app.get('/themes', optionalAuth, (req, res) => {
     }
 });
 
-app.post('/themes', optionalAuth, (req, res) => {
+app.post('/api/themes', optionalAuth, (req, res) => {
     try {
         const { name, data, isPublic } = req.body;
         const id = uuidv4();

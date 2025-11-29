@@ -521,6 +521,14 @@ const WorkSuiteThemes = (function() {
     function generateCSSVariables(theme) {
         if (!theme) return '';
         
+        // Safely get style values with defaults
+        const styles = theme.styles || {};
+        const headingWeight = styles.headingWeight || 700;
+        const headingLetterSpacing = styles.headingLetterSpacing || '-0.02em';
+        const bodyLineHeight = styles.bodyLineHeight || 1.7;
+        const paragraphSpacing = styles.paragraphSpacing || '1.25em';
+        const borderRadius = styles.borderRadius || '8px';
+        
         return `
             --content-font-heading: ${theme.fonts.heading};
             --content-font-body: ${theme.fonts.body};
@@ -541,11 +549,22 @@ const WorkSuiteThemes = (function() {
             --content-table-border: ${theme.colors.tableBorder};
             --content-table-header-bg: ${theme.colors.tableHeaderBg};
             
-            --content-heading-weight: ${theme.styles.headingWeight};
-            --content-heading-letter-spacing: ${theme.styles.headingLetterSpacing};
-            --content-body-line-height: ${theme.styles.bodyLineHeight};
-            --content-paragraph-spacing: ${theme.styles.paragraphSpacing};
-            --content-border-radius: ${theme.styles.borderRadius};
+            --content-heading-weight: ${headingWeight};
+            --content-heading-letter-spacing: ${headingLetterSpacing};
+            --content-body-line-height: ${bodyLineHeight};
+            --content-paragraph-spacing: ${paragraphSpacing};
+            --content-border-radius: ${borderRadius};
+            
+            /* Pointer compatibility - slide variables */
+            --slide-bg: ${theme.colors.background};
+            --slide-text: ${theme.colors.text};
+            --slide-heading: ${theme.colors.heading};
+            --slide-accent: ${theme.colors.accent};
+            --slide-muted: ${theme.colors.muted};
+            --slide-code-bg: ${theme.colors.codeBg};
+            --slide-font-heading: ${theme.fonts.heading};
+            --slide-font-body: ${theme.fonts.body};
+            --slide-font-mono: ${theme.fonts.mono};
         `;
     }
 

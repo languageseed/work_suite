@@ -40,13 +40,23 @@ const SERVICE_0_URL = process.env.SERVICE_0_URL || 'http://192.168.0.110:8001';
 // ===========================================
 
 /**
- * Fetch user's workspaces from Service-0
+ * Fetch user's workspaces from Service-0 (by email lookup)
  */
-async function fetchWorkspaces(userId) {
+async function fetchWorkspaces(email) {
     try {
-        const response = await fetch(`${SERVICE_0_URL}/api/v1/users/${userId}/workspaces`);
-        if (response.ok) {
-            return await response.json();
+        // First get the Service-0 user ID by email
+        const userResponse = await fetch(`${SERVICE_0_URL}/api/v1/users/by-email/${encodeURIComponent(email)}`);
+        if (!userResponse.ok) {
+            console.log('User not found in Service-0:', email);
+            return [];
+        }
+        const user = await userResponse.json();
+        
+        // Then get their workspaces
+        const wsResponse = await fetch(`${SERVICE_0_URL}/api/v1/users/${user.user_id}/workspaces`);
+        if (wsResponse.ok) {
+            const data = await wsResponse.json();
+            return data.workspaces || [];
         }
     } catch (err) {
         console.error('Failed to fetch workspaces from Service-0:', err.message);
@@ -55,14 +65,22 @@ async function fetchWorkspaces(userId) {
 }
 
 /**
- * Create a workspace in Service-0
+ * Create a workspace in Service-0 (owner_id should be Service-0 user_id)
  */
-async function createWorkspace(name, ownerId, type = 'personal', description = null) {
+async function createWorkspace(name, ownerEmail, type = 'personal', description = null) {
     try {
+        // First get the Service-0 user ID by email
+        const userResponse = await fetch(`${SERVICE_0_URL}/api/v1/users/by-email/${encodeURIComponent(ownerEmail)}`);
+        if (!userResponse.ok) {
+            console.log('Cannot create workspace - user not in Service-0:', ownerEmail);
+            return null;
+        }
+        const user = await userResponse.json();
+        
         const response = await fetch(`${SERVICE_0_URL}/api/v1/workspaces`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, owner_id: ownerId, type, description })
+            body: JSON.stringify({ name, owner_id: user.user_id, type, description })
         });
         if (response.ok) {
             return await response.json();
@@ -192,7 +210,7 @@ async function syncUserWithService0(userId, email, displayName, authentikSub) {
             console.log(`✅ User synced with Service-0: ${email}`);
             
             // Create a default personal workspace for the user
-            await createWorkspace(`${displayName}'s Workspace`, userId, 'personal', 'Default personal workspace');
+            await createWorkspace(`${displayName}'s Workspace`, email, 'personal', 'Default personal workspace');
             
             return user;
         }
@@ -1023,7 +1041,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 // Get user's workspaces
 app.get('/workspaces', auth, async (req, res) => {
     try {
-        const workspaces = await fetchWorkspaces(req.user.id);
+        const workspaces = await fetchWorkspaces(req.user.email);
         res.json(workspaces);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1034,7 +1052,7 @@ app.get('/workspaces', auth, async (req, res) => {
 app.post('/workspaces', auth, async (req, res) => {
     try {
         const { name, type, description } = req.body;
-        const workspace = await createWorkspace(name, req.user.id, type, description);
+        const workspace = await createWorkspace(name, req.user.email, type, description);
         if (workspace) {
             res.status(201).json(workspace);
         } else {

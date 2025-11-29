@@ -1482,6 +1482,11 @@ ${preview.innerHTML}
                 return;
             }
 
+            // Load custom themes from localStorage
+            if (WorkSuiteThemes.loadCustomThemes) {
+                WorkSuiteThemes.loadCustomThemes();
+            }
+
             // Load saved preference
             currentContentTheme = WorkSuiteThemes.loadPreference();
             

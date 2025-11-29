@@ -1570,12 +1570,18 @@
             loadFromLocalStorage();
             
             // Initialize content themes
-            renderThemeGrid();
             if (typeof WorkSuiteThemes !== 'undefined') {
+                // Load custom themes from localStorage
+                if (WorkSuiteThemes.loadCustomThemes) {
+                    WorkSuiteThemes.loadCustomThemes();
+                }
                 // Use shared preference if no local theme saved
                 if (!currentTheme || currentTheme === 'midnight') {
                     currentTheme = WorkSuiteThemes.loadPreference();
                 }
+            }
+            renderThemeGrid();
+            if (typeof WorkSuiteThemes !== 'undefined') {
                 setTheme(currentTheme);
             }
             

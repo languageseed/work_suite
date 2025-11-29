@@ -620,6 +620,11 @@ console.log(greet('World'));</code></pre>
 
         // ==================== INIT ====================
         function init() {
+            // Load custom themes from localStorage first
+            if (WorkSuiteThemes.loadCustomThemes) {
+                WorkSuiteThemes.loadCustomThemes();
+            }
+            
             // Load saved preference
             currentTheme = WorkSuiteThemes.loadPreference();
             

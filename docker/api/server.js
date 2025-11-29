@@ -642,18 +642,9 @@ async function service0Request(method, path, body = null, sessionToken = null) {
 // Get current user's workspaces from Service-0
 app.get('/api/workspaces', auth, async (req, res) => {
     try {
-        // Get user's workspaces from Service-0
-        const result = await service0Request(
-            'GET',
-            `/api/v1/users/${req.user.id}/workspaces`
-        );
-        
-        if (result.ok) {
-            res.json(result.data);
-        } else {
-            // If user doesn't exist in Service-0, return empty list
-            res.json([]);
-        }
+        // Use email-based lookup since Work Suite and Service-0 have different user IDs
+        const workspaces = await fetchWorkspaces(req.user.email);
+        res.json(workspaces);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -664,18 +655,13 @@ app.post('/api/workspaces', auth, async (req, res) => {
     try {
         const { name, description, type } = req.body;
         
-        const result = await service0Request('POST', '/api/v1/workspaces', {
-            name,
-            description,
-            owner_id: req.user.id,
-            type: type || 'personal',
-            settings: { source: 'work-suite' }
-        });
+        // Use email-based workspace creation
+        const workspace = await createWorkspace(name, req.user.email, type || 'personal', description);
         
-        if (result.ok) {
-            res.status(201).json(result.data);
+        if (workspace) {
+            res.status(201).json(workspace);
         } else {
-            res.status(result.status).json(result.data);
+            res.status(500).json({ error: 'Failed to create workspace' });
         }
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -1034,110 +1020,8 @@ app.post('/upload', upload.single('file'), (req, res) => {
     }
 });
 
-// ===========================================
-// Workspace Routes (Service-0 Integration)
-// ===========================================
-
-// Get user's workspaces
-app.get('/workspaces', auth, async (req, res) => {
-    try {
-        const workspaces = await fetchWorkspaces(req.user.email);
-        res.json(workspaces);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Create a new workspace
-app.post('/workspaces', auth, async (req, res) => {
-    try {
-        const { name, type, description } = req.body;
-        const workspace = await createWorkspace(name, req.user.email, type, description);
-        if (workspace) {
-            res.status(201).json(workspace);
-        } else {
-            res.status(500).json({ error: 'Failed to create workspace' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get items in a workspace
-app.get('/workspaces/:workspaceId/items', optionalAuth, async (req, res) => {
-    try {
-        const { workspaceId } = req.params;
-        
-        // Get items from local database
-        const items = db.prepare(`
-            SELECT * FROM items WHERE workspace_id = ? ORDER BY updated_at DESC
-        `).all(workspaceId);
-        
-        // Attach tags
-        const getTagsStmt = db.prepare(`
-            SELECT t.* FROM tags t
-            JOIN item_tags it ON t.id = it.tag_id
-            WHERE it.item_id = ?
-        `);
-        
-        const itemsWithTags = items.map(item => ({
-            ...item,
-            tags: getTagsStmt.all(item.id)
-        }));
-        
-        res.json(itemsWithTags);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Sync item to workspace (register as Service-0 object)
-app.post('/workspaces/:workspaceId/items/:itemId/sync', auth, async (req, res) => {
-    try {
-        const { workspaceId, itemId } = req.params;
-        
-        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
-        if (!item) {
-            return res.status(404).json({ error: 'Item not found' });
-        }
-        
-        // Register with Service-0
-        const objectId = await registerObject(workspaceId, item);
-        
-        if (objectId) {
-            // Update local item with workspace and object reference
-            db.prepare(`
-                UPDATE items 
-                SET workspace_id = ?, service0_object_id = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `).run(workspaceId, objectId, itemId);
-            
-            const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
-            res.json(updatedItem);
-        } else {
-            // Still update local workspace_id even if Service-0 registration fails
-            db.prepare(`
-                UPDATE items SET workspace_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-            `).run(workspaceId, itemId);
-            
-            const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
-            res.json(updatedItem);
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get shared objects from all DOCeater services in a workspace
-app.get('/workspaces/:workspaceId/objects', auth, async (req, res) => {
-    try {
-        const { workspaceId } = req.params;
-        const objects = await fetchWorkspaceObjects(workspaceId);
-        res.json(objects);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+// Note: Routes below without /api/ prefix are accessed through nginx which 
+// strips /api/ when proxying, so /api/workspaces → /workspaces on this server
 
 // ===========================================
 // Tags Routes

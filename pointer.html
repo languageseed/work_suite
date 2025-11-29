@@ -971,8 +971,8 @@
             </div>
             <input type="text" class="deck-title" id="deckTitle" value="Untitled Presentation" placeholder="Presentation title...">
             <div class="header-actions">
-                <button class="btn" onclick="exportDeck()">
-                    <span>💾</span> Save
+                <button class="btn" onclick="saveToTags()">
+                    <span>🏷️</span> Save to Tags
                 </button>
                 <button class="btn" onclick="loadDeck()">
                     <span>📂</span> Load
@@ -1624,22 +1624,43 @@
         }
         
         function saveToTags() {
-            if (!window.currentTagsId) return;
-            
             try {
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const fileIndex = tagsFiles.findIndex(f => f.id === window.currentTagsId);
+                const content = slides.map(s => s.content).join('\n\n---\n\n');
+                const title = deckTitle.value || 'Untitled Presentation';
                 
-                if (fileIndex >= 0) {
-                    // Combine slides back into markdown
-                    const content = slides.map(s => s.content).join('\n\n---\n\n');
-                    tagsFiles[fileIndex].content = content;
-                    tagsFiles[fileIndex].updatedAt = Date.now();
-                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                    showToast('Saved to Tags');
+                if (window.currentTagsId) {
+                    // Update existing Tags entry
+                    const fileIndex = tagsFiles.findIndex(f => f.id === window.currentTagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].name = title;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    // Create new Tags entry
+                    const newTagsId = 'pointer-' + Date.now();
+                    const newEntry = {
+                        id: newTagsId,
+                        name: title,
+                        type: 'pointer',
+                        folder: 'Presentations',
+                        tags: ['presentation'],
+                        status: 'done',
+                        scope: 'me',
+                        content: content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
+                    window.currentTagsId = newTagsId;
                 }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showToast('Saved to Tags ✓');
             } catch (e) {
                 console.error('Error saving to Tags:', e);
+                showToast('Error saving to Tags');
             }
         }
 

@@ -873,8 +873,8 @@
                         <div class="content-theme-list" id="contentThemeList"></div>
                     </div>
                 </div>
-                <button class="header-btn" onclick="exportMarkdown()" title="Download as .md file" aria-label="Download Markdown">
-                    <span>💾</span> <span>Save</span>
+                <button class="header-btn" onclick="saveToTags()" title="Save to Tags" aria-label="Save to Tags">
+                    <span>🏷️</span> <span>Save to Tags</span>
                 </button>
                 <button class="header-btn" onclick="exportHTML()" title="Export as HTML" aria-label="Export HTML">
                     <span>📄</span> <span>HTML</span>
@@ -1177,10 +1177,10 @@ graph TD
                 e.preventDefault();
                 insertLink();
             }
-            // Ctrl/Cmd + S: Save
+            // Ctrl/Cmd + S: Save to Tags
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                exportMarkdown();
+                saveToTags();
             }
             // Tab: Insert spaces
             if (e.key === 'Tab') {
@@ -1552,20 +1552,45 @@ ${preview.innerHTML}
         }
         
         function saveToTags() {
-            if (!currentTagsId) return;
-            
             try {
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                const content = editor.value;
                 
-                if (fileIndex >= 0) {
-                    tagsFiles[fileIndex].content = editor.value;
-                    tagsFiles[fileIndex].updatedAt = Date.now();
-                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                    showToast('Saved to Tags');
+                // Extract title from first heading or use default
+                const titleMatch = content.match(/^#\s+(.+)$/m);
+                const title = titleMatch ? titleMatch[1] : 'Untitled Document';
+                
+                if (currentTagsId) {
+                    // Update existing Tags entry
+                    const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].name = title;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    // Create new Tags entry
+                    currentTagsId = 'merman-' + Date.now();
+                    const newEntry = {
+                        id: currentTagsId,
+                        name: title,
+                        type: 'merman',
+                        folder: 'Documents',
+                        tags: ['markdown'],
+                        status: 'done',
+                        scope: 'me',
+                        content: content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
                 }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showToast('Saved to Tags ✓', 'success');
             } catch (e) {
                 console.error('Error saving to Tags:', e);
+                showToast('Error saving to Tags', 'error');
             }
         }
 

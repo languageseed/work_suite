@@ -894,8 +894,8 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn" onclick="exportTimeline()">📥 Export</button>
-                <button class="btn" onclick="saveTimeline()">💾 Save</button>
+                <button class="btn" onclick="exportTimeline()">📥 Export HTML</button>
+                <button class="btn" onclick="saveToTags()">🏷️ Save to Tags</button>
                 <button class="btn" onclick="loadTimeline()">📂 Load</button>
             </div>
         </header>
@@ -1389,6 +1389,54 @@
                 console.error('Error loading from Tags:', e);
             }
             return false;
+        }
+        
+        function saveToTags() {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const title = journeyTitle.value || 'Untitled Timeline';
+                
+                // Convert to Tags format
+                const content = JSON.stringify({
+                    events: events.map(e => ({
+                        date: e.date,
+                        title: e.title,
+                        description: e.description
+                    }))
+                });
+                
+                if (currentTagsId) {
+                    // Update existing Tags entry
+                    const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].name = title;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    // Create new Tags entry
+                    currentTagsId = 'journey-' + Date.now();
+                    const newEntry = {
+                        id: currentTagsId,
+                        name: title,
+                        type: 'journey',
+                        folder: 'Timelines',
+                        tags: ['timeline'],
+                        status: 'done',
+                        scope: 'me',
+                        content: content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
+                }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showToast('Saved to Tags ✓');
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                showToast('Error saving to Tags');
+            }
         }
         
         function showToast(message) {

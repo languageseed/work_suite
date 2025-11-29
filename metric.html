@@ -618,7 +618,7 @@
             <div class="header-actions">
                 <button class="btn" onclick="clearSheet()">🗑️ Clear</button>
                 <button class="btn" onclick="exportCSV()">📥 CSV</button>
-                <button class="btn" onclick="saveSheet()">💾 Save</button>
+                <button class="btn" onclick="saveToTags()">🏷️ Save to Tags</button>
                 <button class="btn btn-primary" onclick="loadSheet()">📂 Load</button>
             </div>
         </header>
@@ -1607,6 +1607,68 @@
                 console.error('Error loading from Tags:', e);
             }
             return false;
+        }
+        
+        function saveToTags() {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const title = sheetName.value || 'Untitled Sheet';
+                
+                // Convert spreadsheet to table format
+                const usedCells = Object.keys(data).filter(k => data[k].value || data[k].formula);
+                if (usedCells.length === 0) {
+                    showToast('Nothing to save');
+                    return;
+                }
+                
+                // Find used range
+                const cols = [...new Set(usedCells.map(c => c.match(/[A-Z]+/)[0]))].sort();
+                const rows = [...new Set(usedCells.map(c => parseInt(c.match(/\d+/)[0])))].sort((a,b) => a-b);
+                
+                const headers = cols.map(col => {
+                    const cell = data[`${col}1`];
+                    return cell ? (cell.value || '') : '';
+                });
+                
+                const tableRows = rows.slice(1).map(row => 
+                    cols.map(col => {
+                        const cell = data[`${col}${row}`];
+                        return cell ? (cell.value || '') : '';
+                    })
+                );
+                
+                const content = JSON.stringify({ headers, rows: tableRows });
+                
+                if (currentTagsId) {
+                    const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].name = title;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    currentTagsId = 'metric-' + Date.now();
+                    const newEntry = {
+                        id: currentTagsId,
+                        name: title,
+                        type: 'metric',
+                        folder: 'Sheets',
+                        tags: ['spreadsheet'],
+                        status: 'done',
+                        scope: 'me',
+                        content: content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
+                }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showToast('Saved to Tags ✓');
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                showToast('Error saving to Tags');
+            }
         }
         
         function showToast(message) {

@@ -732,7 +732,7 @@
                     <div class="theme-dot theme-emerald" data-theme="emerald" onclick="setTheme('emerald')"></div>
                     <div class="theme-dot theme-light" data-theme="light" onclick="setTheme('light')"></div>
                 </div>
-                <button class="btn" onclick="saveBoard()">💾 Save</button>
+                <button class="btn" onclick="saveToTags()">🏷️ Save to Tags</button>
                 <button class="btn" onclick="loadBoard()">📂 Load</button>
             </div>
         </header>
@@ -1273,6 +1273,58 @@
                 console.error('Error loading from Tags:', e);
             }
             return false;
+        }
+        
+        function saveToTags() {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const title = boardTitle.value || 'Untitled Board';
+                
+                // Convert to Tags format
+                const content = JSON.stringify({
+                    columns: columns.map(c => c.title),
+                    cards: columns.flatMap(col => 
+                        col.cards.map(card => ({
+                            id: card.id,
+                            column: col.title,
+                            title: card.title,
+                            description: card.description
+                        }))
+                    )
+                });
+                
+                if (currentTagsId) {
+                    // Update existing Tags entry
+                    const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].name = title;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    // Create new Tags entry
+                    currentTagsId = 'done-' + Date.now();
+                    const newEntry = {
+                        id: currentTagsId,
+                        name: title,
+                        type: 'done',
+                        folder: 'Boards',
+                        tags: ['kanban'],
+                        status: 'in-progress',
+                        scope: 'me',
+                        content: content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
+                }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showToast('Saved to Tags ✓');
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                showToast('Error saving to Tags');
+            }
         }
         
         function showToast(message) {

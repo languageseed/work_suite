@@ -921,8 +921,8 @@
                     <button class="btn btn-danger" id="deleteNoteBtn" onclick="deleteCurrentNote()" style="display: none;">
                         🗑️ Delete
                     </button>
-                    <button class="btn btn-primary" onclick="saveAndClose()">
-                        ✓ Save
+                    <button class="btn btn-primary" onclick="saveCurrentNoteToTags(); closeEditor();">
+                        🏷️ Save to Tags
                     </button>
                 </div>
             </div>
@@ -1071,23 +1071,57 @@
             }
         }
         
-        function saveToTags() {
-            if (!currentNote || !currentNote.tagsId) return;
+        function saveToTags(noteToSave) {
+            const note = noteToSave || notes.find(n => n.id === editingNoteId);
+            if (!note) return;
             
             try {
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const fileIndex = tagsFiles.findIndex(f => f.id === currentNote.tagsId);
                 
-                if (fileIndex >= 0) {
-                    tagsFiles[fileIndex].content = currentNote.content;
-                    tagsFiles[fileIndex].name = currentNote.title;
-                    tagsFiles[fileIndex].tags = currentNote.tags;
-                    tagsFiles[fileIndex].updatedAt = Date.now();
-                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                    showNotification('Saved to Tags');
+                if (note.tagsId) {
+                    // Update existing Tags entry
+                    const fileIndex = tagsFiles.findIndex(f => f.id === note.tagsId);
+                    if (fileIndex >= 0) {
+                        tagsFiles[fileIndex].content = note.content;
+                        tagsFiles[fileIndex].name = note.title;
+                        tagsFiles[fileIndex].tags = note.tags;
+                        tagsFiles[fileIndex].updatedAt = Date.now();
+                    }
+                } else {
+                    // Create new Tags entry
+                    const newTagsId = 'slate-' + Date.now();
+                    const newEntry = {
+                        id: newTagsId,
+                        name: note.title || 'Untitled Note',
+                        type: 'slate',
+                        folder: 'Notes',
+                        tags: note.tags || [],
+                        status: 'done',
+                        scope: 'me',
+                        content: note.content,
+                        createdAt: Date.now(),
+                        updatedAt: Date.now()
+                    };
+                    tagsFiles.unshift(newEntry);
+                    
+                    // Link the note to Tags
+                    note.tagsId = newTagsId;
+                    saveToLocalStorage();
                 }
+                
+                localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                showNotification('Saved to Tags ✓');
             } catch (e) {
                 console.error('Error saving to Tags:', e);
+                showNotification('Error saving to Tags', 'error');
+            }
+        }
+        
+        function saveCurrentNoteToTags() {
+            saveNote();
+            const note = notes.find(n => n.id === editingNoteId);
+            if (note) {
+                saveToTags(note);
             }
         }
 

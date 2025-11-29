@@ -45,7 +45,7 @@
         /* Layout */
         .app {
             display: grid;
-            grid-template-columns: 280px 1fr 320px;
+            grid-template-columns: 240px 1fr 280px;
             grid-template-rows: 60px 1fr;
             height: 100vh;
         }
@@ -194,11 +194,28 @@
         
         /* Main Content */
         main {
-            padding: 24px;
+            padding: 20px;
             overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .main-left {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
+        }
+        
+        .main-right {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-right .theme-preview {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .panel {
@@ -319,8 +336,12 @@
         /* Font Picker */
         .font-section {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .font-section .font-group:last-child {
+            grid-column: span 2;
         }
         
         .font-group {
@@ -374,44 +395,82 @@
         }
         
         .theme-preview {
+            border-radius: 16px;
+            padding: 40px;
+            min-height: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+        
+        .preview-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 32px;
-            min-height: 380px;
+            padding: 16px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-panel .sidebar-title {
+            margin-bottom: 16px;
         }
         
         .theme-preview h1 {
             margin-bottom: 12px;
-            font-size: 28px;
+            font-size: 32px;
         }
         
         .theme-preview h2 {
             margin-bottom: 16px;
-            font-size: 20px;
+            font-size: 22px;
             opacity: 0.9;
         }
         
         .theme-preview p {
             margin-bottom: 16px;
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 15px;
+            line-height: 1.7;
             opacity: 0.85;
         }
         
         .theme-preview code {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
+            padding: 3px 10px;
+            border-radius: 5px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
+            font-size: 13px;
+        }
+        
+        .theme-preview pre {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        
+        .theme-preview pre code {
+            padding: 0;
+            background: transparent;
         }
         
         .theme-preview blockquote {
-            border-left: 3px solid;
-            padding-left: 12px;
+            border-left: 4px solid;
+            padding-left: 16px;
             margin: 16px 0;
             font-style: italic;
-            font-size: 13px;
+            font-size: 14px;
             opacity: 0.8;
+        }
+        
+        .theme-preview ul {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+        
+        .theme-preview li {
+            margin-bottom: 8px;
+            font-size: 14px;
         }
         
         /* Theme Name Input */
@@ -682,28 +741,30 @@
         
         <!-- Main Content -->
         <main>
-            <!-- Extracted Colors -->
-            <div class="panel" id="colorsPanel">
-                <div class="panel-title">🎯 Extracted Colors</div>
-                <div id="extractedColors" class="empty-state">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 16v-4M12 8h.01"/>
-                    </svg>
-                    <p>Select an image to extract colors</p>
+            <!-- Left Column: Colors, Palettes, Typography -->
+            <div class="main-left">
+                <!-- Extracted Colors -->
+                <div class="panel" id="colorsPanel">
+                    <div class="panel-title">🎯 Extracted Colors</div>
+                    <div id="extractedColors" class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                        <p>Select an image to extract colors</p>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Palette Variations -->
-            <div class="panel" id="variationsPanel" style="display: none;">
-                <div class="panel-title">✨ Palette Variations</div>
-                <div class="variations-grid" id="variationsGrid"></div>
-            </div>
-            
-            <!-- Font Selection -->
-            <div class="panel">
-                <div class="panel-title">🔤 Typography</div>
-                <div class="font-section">
+                
+                <!-- Palette Variations -->
+                <div class="panel" id="variationsPanel" style="display: none;">
+                    <div class="panel-title">✨ Palette Variations</div>
+                    <div class="variations-grid" id="variationsGrid"></div>
+                </div>
+                
+                <!-- Font Selection -->
+                <div class="panel">
+                    <div class="panel-title">🔤 Typography</div>
+                    <div class="font-section">
                     <div class="font-group">
                         <div class="font-group-title">Heading Font</div>
                         <select class="font-select" id="headingFont" onchange="updateFontPreview()">
@@ -756,26 +817,37 @@
                     </div>
                 </div>
             </div>
+            </div>
+            
+            <!-- Right Column: Live Preview -->
+            <div class="main-right">
+                <div class="preview-panel">
+                    <div class="sidebar-title">👁️ Live Preview</div>
+                    <div class="theme-preview" id="themePreview">
+                        <h1>Welcome</h1>
+                        <h2>Subtitle Here</h2>
+                        <p>This is how your content will look with the selected theme colors and typography.</p>
+                        <p>Here's some <code>inline code</code> styling.</p>
+                        <blockquote>A beautiful quote with accent styling.</blockquote>
+                        <ul>
+                            <li>List item one</li>
+                            <li>List item two</li>
+                        </ul>
+                        <pre><code>const theme = "beautiful";</code></pre>
+                    </div>
+                </div>
+            </div>
         </main>
         
-        <!-- Right Sidebar: Preview & Export -->
+        <!-- Right Sidebar: Config & Export -->
         <aside class="preview-sidebar">
             <div class="sidebar-title">📝 Theme Name</div>
             <input type="text" class="theme-name-input" id="themeName" value="Custom Theme" placeholder="Enter theme name...">
             
-            <div class="sidebar-title">👁️ Live Preview</div>
-            <div class="theme-preview" id="themePreview">
-                <h1>Welcome</h1>
-                <h2>Subtitle Here</h2>
-                <p>This is how your content will look with the selected theme colors and typography.</p>
-                <p>Here's some <code>inline code</code> styling.</p>
-                <blockquote>A beautiful quote with accent styling.</blockquote>
-            </div>
-            
             <div class="sidebar-title">🎨 Color Roles</div>
             <div class="role-mapping" id="roleMapping">
-                <div class="empty-state" style="padding: 20px;">
-                    <p style="font-size: 12px;">Colors will appear here</p>
+                <div class="empty-state" style="padding: 16px;">
+                    <p style="font-size: 11px;">Colors will appear here</p>
                 </div>
             </div>
             

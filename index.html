@@ -160,82 +160,13 @@
             border-color: var(--border-hover);
         }
 
-        /* ==================== HERO ==================== */
-        .hero {
-            text-align: center;
-            padding: 80px 0 60px;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            padding: 6px 16px;
-            border-radius: 100px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-
-        .hero-badge-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--accent-metric);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .hero-title {
-            font-family: var(--font-display);
-            font-size: clamp(40px, 8vw, 72px);
-            font-weight: 700;
-            letter-spacing: -2px;
-            line-height: 1.1;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 32px;
-            line-height: 1.7;
-        }
-
-        .hero-features {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 32px;
-            flex-wrap: wrap;
-        }
-
-        .hero-feature {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .hero-feature-icon {
-            color: var(--accent-metric);
-        }
-
         /* ==================== APPS GRID ==================== */
         .apps-section {
             padding: 40px 0 80px;
+        }
+
+        .apps-section.apps-top {
+            padding-top: 40px;
         }
 
         .section-header {
@@ -427,6 +358,80 @@
             line-height: 1.6;
         }
 
+        /* ==================== ABOUT SECTION ==================== */
+        .about-section {
+            text-align: center;
+            padding: 80px 0 60px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .about-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .about-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-metric);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .about-title {
+            font-family: var(--font-display);
+            font-size: clamp(32px, 6vw, 48px);
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+
+        .about-features {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .about-feature {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .about-feature-icon {
+            color: var(--accent-metric);
+        }
+
         /* ==================== FOOTER ==================== */
         footer {
             border-top: 1px solid var(--border-color);
@@ -556,42 +561,12 @@
                 <a href="#apps" class="header-link">Apps</a>
                 <a href="themes/" class="header-link">🎨 Themes</a>
                 <a href="themes/designer.html" class="header-link">🖌️ Theme Designer</a>
-                <a href="#features" class="header-link">Features</a>
+                <a href="#about" class="header-link">About</a>
                 <a href="README.md" class="header-link" target="_blank">Docs</a>
             </div>
         </header>
 
-        <section class="hero">
-            <div class="hero-badge">
-                <span class="hero-badge-dot"></span>
-                <span>8 apps · All offline-ready</span>
-            </div>
-            <h1 class="hero-title">AI-Friendly<br>Productivity Tools</h1>
-            <p class="hero-subtitle">
-                A collection of lightweight, single-file apps that produce simple, text-based outputs. 
-                Perfect for LLM workflows — easy to generate, parse, and transform.
-            </p>
-            <div class="hero-features">
-                <div class="hero-feature">
-                    <span class="hero-feature-icon">✓</span>
-                    <span>Zero dependencies</span>
-                </div>
-                <div class="hero-feature">
-                    <span class="hero-feature-icon">✓</span>
-                    <span>Works offline</span>
-                </div>
-                <div class="hero-feature">
-                    <span class="hero-feature-icon">✓</span>
-                    <span>JSON/Markdown exports</span>
-                </div>
-                <div class="hero-feature">
-                    <span class="hero-feature-icon">✓</span>
-                    <span>LocalStorage persistence</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="apps-section" id="apps">
+        <section class="apps-section apps-top" id="apps">
             <div class="section-header">
                 <h2 class="section-title">Choose Your Tool</h2>
                 <p class="section-subtitle">Navigate with arrow keys, press Enter to open</p>
@@ -762,6 +737,36 @@
                     <p class="feature-description">
                         Export everything as JSON files. Easy to backup, version control, or transform programmatically.
                     </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section" id="about">
+            <div class="about-badge">
+                <span class="about-badge-dot"></span>
+                <span>8 apps · All offline-ready</span>
+            </div>
+            <h2 class="about-title">AI-Friendly<br>Productivity Tools</h2>
+            <p class="about-subtitle">
+                A collection of lightweight, single-file apps that produce simple, text-based outputs. 
+                Perfect for LLM workflows — easy to generate, parse, and transform.
+            </p>
+            <div class="about-features">
+                <div class="about-feature">
+                    <span class="about-feature-icon">✓</span>
+                    <span>Zero dependencies</span>
+                </div>
+                <div class="about-feature">
+                    <span class="about-feature-icon">✓</span>
+                    <span>Works offline</span>
+                </div>
+                <div class="about-feature">
+                    <span class="about-feature-icon">✓</span>
+                    <span>JSON/Markdown exports</span>
+                </div>
+                <div class="about-feature">
+                    <span class="about-feature-icon">✓</span>
+                    <span>LocalStorage persistence</span>
                 </div>
             </div>
         </section>

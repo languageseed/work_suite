@@ -642,12 +642,80 @@ const WorkSuiteThemes = (function() {
      * Initialize with saved preference
      */
     function init(container) {
+        loadCustomThemes(); // Load any custom themes from localStorage
         const savedTheme = loadPreference();
         loadFonts(savedTheme);
         if (container) {
             apply(savedTheme, container);
         }
         return savedTheme;
+    }
+
+    // ==================== CUSTOM THEMES ====================
+
+    /**
+     * Load custom themes from localStorage into the registry
+     */
+    function loadCustomThemes() {
+        try {
+            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
+            Object.entries(customThemes).forEach(([id, theme]) => {
+                themes[id] = theme;
+            });
+        } catch (e) {
+            console.warn('Could not load custom themes:', e);
+        }
+    }
+
+    /**
+     * Save a custom theme to localStorage and add to registry
+     */
+    function saveCustomTheme(themeId, themeData) {
+        try {
+            // Add to registry
+            themes[themeId] = themeData;
+            
+            // Save to localStorage
+            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
+            customThemes[themeId] = themeData;
+            localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
+            
+            return true;
+        } catch (e) {
+            console.warn('Could not save custom theme:', e);
+            return false;
+        }
+    }
+
+    /**
+     * Delete a custom theme
+     */
+    function deleteCustomTheme(themeId) {
+        try {
+            // Only delete custom themes (not built-in ones)
+            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
+            if (customThemes[themeId]) {
+                delete customThemes[themeId];
+                delete themes[themeId];
+                localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.warn('Could not delete custom theme:', e);
+            return false;
+        }
+    }
+
+    /**
+     * Get list of custom theme IDs
+     */
+    function getCustomThemeIds() {
+        try {
+            return Object.keys(JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}'));
+        } catch (e) {
+            return [];
+        }
     }
 
     // ==================== PUBLIC API ====================
@@ -665,7 +733,12 @@ const WorkSuiteThemes = (function() {
         loadFonts,
         savePreference,
         loadPreference,
-        init
+        init,
+        // Custom theme management
+        loadCustomThemes,
+        saveCustomTheme,
+        deleteCustomTheme,
+        getCustomThemeIds
     };
 
 })();

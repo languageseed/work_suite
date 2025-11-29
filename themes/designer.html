@@ -13,6 +13,9 @@
     <!-- Culori for color conversion -->
     <script src="https://cdn.jsdelivr.net/npm/culori@4.0.1/bundled/culori.min.js"></script>
     
+    <!-- Work Suite Themes API -->
+    <script src="content-themes.js"></script>
+    
     <style>
         :root {
             --bg: #0a0a0f;
@@ -914,7 +917,13 @@
                 </div>
             </div>
             
-            <div class="sidebar-title">📦 Export</div>
+            <div class="sidebar-title">💾 Save Theme</div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="saveToLibrary()">
+                ✨ Save to Theme Library
+            </button>
+            <div id="saveStatus" style="font-size: 11px; color: var(--success); text-align: center; margin-bottom: 12px; display: none;"></div>
+            
+            <div class="sidebar-title">📦 Export Code</div>
             <div class="export-section">
                 <div class="export-code" id="exportCode">// Select an image to generate theme code</div>
                 <div style="display: flex; gap: 8px; margin-top: 12px;">
@@ -1720,6 +1729,89 @@
         
         function exportTheme() {
             downloadTheme();
+        }
+        
+        function saveToLibrary() {
+            if (!assignedRoles) {
+                showToast('Select an image first to create a theme', 'error');
+                return;
+            }
+            
+            const themeName = document.getElementById('themeName').value || 'Custom Theme';
+            const themeId = themeName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            
+            const headingFont = document.getElementById('headingFont').value;
+            const bodyFont = document.getElementById('bodyFont').value;
+            const monoFont = document.getElementById('monoFont').value;
+            
+            const bg = assignedRoles.background;
+            const isDark = (bg.oklchValues?.l || 0.5) < 0.5;
+            
+            const themeData = {
+                name: themeName,
+                category: isDark ? 'dark' : 'light',
+                description: 'Custom theme created with Theme Designer',
+                isCustom: true,
+                fonts: {
+                    heading: headingFont,
+                    body: bodyFont,
+                    mono: monoFont
+                },
+                colors: {
+                    background: bg.hex,
+                    backgroundSolid: bg.hex,
+                    text: assignedRoles.text?.hex || '#ffffff',
+                    heading: assignedRoles.heading?.hex || '#ffffff',
+                    accent: assignedRoles.accent?.hex || '#64ffda',
+                    accentAlt: assignedRoles.link?.hex || '#ff6b6b',
+                    muted: assignedRoles.muted?.hex || '#888888',
+                    link: assignedRoles.link?.hex || '#64ffda',
+                    codeBg: assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.1)',
+                    codeText: assignedRoles.text?.hex || '#ffffff',
+                    blockquoteBorder: assignedRoles.accent?.hex || '#64ffda',
+                    blockquoteBg: `rgba(${hexToRgbValues(assignedRoles.accent?.hex || '#64ffda')}, 0.1)`,
+                    tableBorder: assignedRoles.muted?.hex || '#333333',
+                    tableHeaderBg: assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.05)'
+                },
+                styles: {
+                    headingWeight: 600,
+                    headingLetterSpacing: '-0.01em',
+                    bodyLineHeight: 1.7,
+                    paragraphSpacing: '1.25em',
+                    borderRadius: '8px'
+                }
+            };
+            
+            // Check if WorkSuiteThemes is available
+            if (typeof WorkSuiteThemes !== 'undefined' && WorkSuiteThemes.saveCustomTheme) {
+                const success = WorkSuiteThemes.saveCustomTheme(themeId, themeData);
+                if (success) {
+                    showSaveStatus(`✓ "${themeName}" saved to library!`);
+                    showToast('Theme saved! Available in all Work Suite apps.');
+                } else {
+                    showToast('Failed to save theme', 'error');
+                }
+            } else {
+                // Fallback: save directly to localStorage
+                try {
+                    const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
+                    customThemes[themeId] = themeData;
+                    localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
+                    showSaveStatus(`✓ "${themeName}" saved to library!`);
+                    showToast('Theme saved! Available in all Work Suite apps.');
+                } catch (e) {
+                    showToast('Failed to save theme: ' + e.message, 'error');
+                }
+            }
+        }
+        
+        function showSaveStatus(message) {
+            const status = document.getElementById('saveStatus');
+            status.textContent = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
         }
         
         function copyColor(hex) {

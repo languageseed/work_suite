@@ -321,6 +321,21 @@
             box-shadow: 0 0 0 2px var(--accent);
         }
         
+        .color-swatch.pickable {
+            cursor: crosshair;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .color-swatch.pickable:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 3px var(--warning);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+        }
+        
         .color-swatch::after {
             content: attr(data-hex);
             position: absolute;
@@ -432,11 +447,11 @@
         .theme-preview {
             border-radius: 12px;
             padding: 24px;
-            min-height: 280px;
+            min-height: 400px;
         }
         
         .preview-panel {
-            flex: 1;
+            flex: 2;
         }
         
         .theme-preview h1 {
@@ -487,23 +502,52 @@
         /* Color Role Mapping */
         .role-mapping {
             display: grid;
-            gap: 8px;
+            gap: 6px;
         }
         
         .role-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             padding: 8px 12px;
             background: var(--bg);
             border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .role-item:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+        
+        .role-item.picking {
+            border-color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
         }
         
         .role-color {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .role-color:hover {
+            transform: scale(1.1);
+            border-color: var(--accent);
+        }
+        
+        .role-color input[type="color"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
         }
         
         .role-name {
@@ -513,9 +557,42 @@
         }
         
         .role-value {
-            font-size: 11px;
+            font-size: 10px;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text-muted);
+        }
+        
+        .role-pick-btn {
+            padding: 4px 8px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .role-pick-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        .role-pick-btn.active {
+            background: var(--warning);
+            color: black;
+            border-color: var(--warning);
+        }
+        
+        .picking-hint {
+            font-size: 11px;
+            color: var(--warning);
+            text-align: center;
+            padding: 8px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 6px;
+            margin-bottom: 8px;
         }
         
         /* Export Section */
@@ -1324,21 +1401,33 @@
         // ==================== UI RENDERING ====================
         function renderExtractedColors(colors) {
             const container = document.getElementById('extractedColors');
+            const hint = pickingRole ? 
+                `<div class="picking-hint">🎯 Click a color to assign it to the selected role</div>` : 
+                `<div class="palette-label">Click a color to copy, or use "Pick" in Color Roles below</div>`;
+            
             container.innerHTML = `
                 <div class="palette-section">
-                    <div class="palette-label">Click a color to copy its value</div>
+                    ${hint}
                     <div class="palette-colors">
                         ${colors.map(c => `
-                            <div class="color-swatch" 
+                            <div class="color-swatch ${pickingRole ? 'pickable' : ''}" 
                                  style="background: ${c.hex};" 
                                  data-hex="${c.hex}"
-                                 onclick="copyColor('${c.hex}')"
+                                 onclick="handleSwatchClick('${c.hex}')"
                                  title="${c.hex}">
                             </div>
                         `).join('')}
                     </div>
                 </div>
             `;
+        }
+        
+        function handleSwatchClick(hex) {
+            if (pickingRole) {
+                assignColorToRole(hex);
+            } else {
+                copyColor(hex);
+            }
         }
         
         function renderVariations() {
@@ -1365,27 +1454,109 @@
             generateExportCode();
         }
         
+        let pickingRole = null; // Track which role is being picked
+        
         function renderRoleMapping() {
             if (!assignedRoles) return;
             
             const container = document.getElementById('roleMapping');
             const roles = [
                 { key: 'background', name: 'Background' },
+                { key: 'backgroundSolid', name: 'BG Solid' },
                 { key: 'text', name: 'Text' },
                 { key: 'heading', name: 'Heading' },
                 { key: 'accent', name: 'Accent' },
+                { key: 'accentAlt', name: 'Accent Alt' },
                 { key: 'link', name: 'Link' },
                 { key: 'muted', name: 'Muted' },
-                { key: 'codeBg', name: 'Code BG' }
+                { key: 'codeBg', name: 'Code BG' },
+                { key: 'codeText', name: 'Code Text' }
             ];
             
-            container.innerHTML = roles.map(role => `
-                <div class="role-item">
-                    <div class="role-color" style="background: ${assignedRoles[role.key]?.hex || '#000'}"></div>
+            let html = '';
+            if (pickingRole) {
+                html += `<div class="picking-hint">🎯 Click a color swatch above to assign to "${roles.find(r => r.key === pickingRole)?.name}"</div>`;
+            }
+            
+            html += roles.map(role => `
+                <div class="role-item ${pickingRole === role.key ? 'picking' : ''}" onclick="startPickingRole('${role.key}')">
+                    <div class="role-color" style="background: ${assignedRoles[role.key]?.hex || '#000'}" title="Click to use color picker">
+                        <input type="color" value="${assignedRoles[role.key]?.hex || '#000000'}" onchange="setRoleColor('${role.key}', this.value)" onclick="event.stopPropagation()">
+                    </div>
                     <div class="role-name">${role.name}</div>
                     <div class="role-value">${assignedRoles[role.key]?.hex || 'N/A'}</div>
+                    <button class="role-pick-btn ${pickingRole === role.key ? 'active' : ''}" onclick="event.stopPropagation(); togglePickingRole('${role.key}')" title="Pick from palette">
+                        ${pickingRole === role.key ? '✓ Picking' : '🎨 Pick'}
+                    </button>
                 </div>
             `).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        function startPickingRole(roleKey) {
+            // Only start if clicking on the row (not on specific controls)
+            if (!pickingRole) {
+                pickingRole = roleKey;
+                renderRoleMapping();
+            }
+        }
+        
+        function togglePickingRole(roleKey) {
+            if (pickingRole === roleKey) {
+                pickingRole = null;
+            } else {
+                pickingRole = roleKey;
+            }
+            renderRoleMapping();
+            // Re-render colors to show pickable state
+            if (extractedColors.length > 0) {
+                renderExtractedColors(extractedColors);
+            }
+        }
+        
+        function setRoleColor(roleKey, hexColor) {
+            if (!assignedRoles) return;
+            
+            // Convert hex to OKLCH
+            const rgb = culori.parse(hexColor);
+            const oklch = rgbToOklch(rgb);
+            
+            assignedRoles[roleKey] = {
+                hex: hexColor,
+                lightness: oklch.l * 100,
+                chroma: oklch.c,
+                hue: oklch.h || 0
+            };
+            
+            pickingRole = null;
+            renderRoleMapping();
+            updateThemePreview();
+            generateExportCode();
+        }
+        
+        function assignColorToRole(colorHex) {
+            if (pickingRole && assignedRoles) {
+                const rgb = culori.parse(colorHex);
+                const oklch = rgbToOklch(rgb);
+                
+                assignedRoles[pickingRole] = {
+                    hex: colorHex,
+                    lightness: oklch.l * 100,
+                    chroma: oklch.c,
+                    hue: oklch.h || 0
+                };
+                
+                pickingRole = null;
+                renderRoleMapping();
+                updateThemePreview();
+                generateExportCode();
+                // Re-render colors to remove pickable state
+                if (extractedColors.length > 0) {
+                    renderExtractedColors(extractedColors);
+                }
+                showToast(`Color assigned!`);
+            }
         }
         
         function updateThemePreview() {

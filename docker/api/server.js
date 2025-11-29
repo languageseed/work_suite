@@ -160,6 +160,48 @@ async function fetchWorkspaceObjects(workspaceId) {
     return [];
 }
 
+/**
+ * Register or sync a user with Service-0
+ */
+async function syncUserWithService0(userId, email, displayName, authentikSub) {
+    try {
+        // First check if user exists
+        const checkResponse = await fetch(`${SERVICE_0_URL}/api/v1/users/by-email/${encodeURIComponent(email)}`);
+        
+        if (checkResponse.ok) {
+            // User exists, return their data
+            return await checkResponse.json();
+        }
+        
+        // User doesn't exist, create them
+        const createResponse = await fetch(`${SERVICE_0_URL}/api/v1/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: userId,
+                email: email,
+                name: displayName,
+                provider: 'authentik',
+                provider_id: authentikSub,
+                status: 'active'
+            })
+        });
+        
+        if (createResponse.ok) {
+            const user = await createResponse.json();
+            console.log(`✅ User synced with Service-0: ${email}`);
+            
+            // Create a default personal workspace for the user
+            await createWorkspace(`${displayName}'s Workspace`, userId, 'personal', 'Default personal workspace');
+            
+            return user;
+        }
+    } catch (err) {
+        console.error('Failed to sync user with Service-0:', err.message);
+    }
+    return null;
+}
+
 // ===========================================
 // Initialize Storage Directories
 // ===========================================
@@ -456,19 +498,24 @@ app.get('/api/auth/callback', async (req, res) => {
         // Create or update local user record
         const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(userInfo.email);
         let userId;
+        const displayName = userInfo.name || userInfo.preferred_username;
         
         if (existingUser) {
             userId = existingUser.id;
             db.prepare(`
                 UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-            `).run(userInfo.name || userInfo.preferred_username, userId);
+            `).run(displayName, userId);
         } else {
             userId = uuidv4();
             db.prepare(`
                 INSERT INTO users (id, email, password_hash, display_name)
                 VALUES (?, ?, ?, ?)
-            `).run(userId, userInfo.email, 'oauth-user', userInfo.name || userInfo.preferred_username);
+            `).run(userId, userInfo.email, 'oauth-user', displayName);
         }
+        
+        // Sync user with Service-0 (async, don't block login)
+        syncUserWithService0(userId, userInfo.email, displayName, userInfo.sub)
+            .catch(err => console.error('Service-0 sync error:', err));
         
         // Create a session token
         const sessionToken = jwt.sign({

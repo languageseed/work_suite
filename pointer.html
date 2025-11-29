@@ -1269,9 +1269,13 @@
                      data-theme="${theme.id}" 
                      data-name="${theme.name}"
                      title="${theme.name}"
+                     aria-label="${theme.name} theme"
+                     tabindex="0"
                      style="background: ${theme.colors.background}; border: 1px solid rgba(255,255,255,0.2);">
                 </button>
             `).join('');
+            
+            console.log('Theme grid rendered with', themes.length, 'themes');
             
             // Add click handlers
             grid.querySelectorAll('.theme-option').forEach(btn => {

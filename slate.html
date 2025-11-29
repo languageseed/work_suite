@@ -986,6 +986,15 @@
             renderNotes();
             renderCommands();
             
+            // Check if opened from Tags with a file ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagsId = urlParams.get('tags_id');
+            
+            if (tagsId) {
+                loadFromTags(tagsId);
+                return;
+            }
+            
             // Add sample notes if empty
             if (notes.length === 0) {
                 notes = [
@@ -1016,6 +1025,68 @@
                 ];
                 saveToLocalStorage();
                 renderNotes();
+            }
+        }
+        
+        // ==================== TAGS INTEGRATION ====================
+        function loadFromTags(tagsId) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const file = tagsFiles.find(f => f.id === tagsId);
+                
+                if (file && file.type === 'slate' && file.content) {
+                    // Create or update a note with the Tags content
+                    const existingNote = notes.find(n => n.tagsId === tagsId);
+                    
+                    if (existingNote) {
+                        // Update existing linked note
+                        currentNote = existingNote;
+                    } else {
+                        // Create new note from Tags file
+                        const newNote = {
+                            id: Date.now(),
+                            tagsId: tagsId,
+                            title: file.name,
+                            content: file.content,
+                            tags: file.tags || [],
+                            createdAt: new Date(file.createdAt).toISOString(),
+                            updatedAt: new Date().toISOString()
+                        };
+                        notes.unshift(newNote);
+                        saveToLocalStorage();
+                        currentNote = newNote;
+                    }
+                    
+                    // Open the note
+                    showEditor();
+                    renderNotes();
+                    showNotification(`Opened "${file.name}" from Tags`);
+                } else {
+                    showNotification('File not found in Tags', 'error');
+                }
+            } catch (e) {
+                console.error('Error loading from Tags:', e);
+                showNotification('Error loading from Tags', 'error');
+            }
+        }
+        
+        function saveToTags() {
+            if (!currentNote || !currentNote.tagsId) return;
+            
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const fileIndex = tagsFiles.findIndex(f => f.id === currentNote.tagsId);
+                
+                if (fileIndex >= 0) {
+                    tagsFiles[fileIndex].content = currentNote.content;
+                    tagsFiles[fileIndex].name = currentNote.title;
+                    tagsFiles[fileIndex].tags = currentNote.tags;
+                    tagsFiles[fileIndex].updatedAt = Date.now();
+                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                    showNotification('Saved to Tags');
+                }
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
             }
         }
 
@@ -1127,8 +1198,9 @@
             
             if (!title && !content) return;
             
+            let note;
             if (editingNoteId) {
-                const note = notes.find(n => n.id === editingNoteId);
+                note = notes.find(n => n.id === editingNoteId);
                 if (note) {
                     note.title = title || 'Untitled';
                     note.content = content;
@@ -1136,7 +1208,7 @@
                     note.updatedAt = new Date().toISOString();
                 }
             } else {
-                const newNote = {
+                note = {
                     id: Date.now(),
                     title: title || 'Untitled',
                     content,
@@ -1144,12 +1216,18 @@
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
-                notes.unshift(newNote);
-                editingNoteId = newNote.id;
+                notes.unshift(note);
+                editingNoteId = note.id;
             }
             
             saveToLocalStorage();
             renderNotes();
+            
+            // Sync to Tags if linked
+            if (note && note.tagsId) {
+                currentNote = note;
+                saveToTags();
+            }
             
             editorStatus.textContent = 'Saved';
             editorStatus.classList.add('saved');

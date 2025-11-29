@@ -1530,6 +1530,45 @@ ${preview.innerHTML}
             }
         });
 
+        // ==================== Tags Integration ====================
+        let currentTagsId = null;
+        
+        function loadFromTags(tagsId) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const file = tagsFiles.find(f => f.id === tagsId);
+                
+                if (file && file.type === 'merman' && file.content) {
+                    editor.value = file.content;
+                    currentTagsId = tagsId;
+                    updatePreview();
+                    showToast(`Opened "${file.name}" from Tags`);
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error loading from Tags:', e);
+            }
+            return false;
+        }
+        
+        function saveToTags() {
+            if (!currentTagsId) return;
+            
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
+                
+                if (fileIndex >= 0) {
+                    tagsFiles[fileIndex].content = editor.value;
+                    tagsFiles[fileIndex].updatedAt = Date.now();
+                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                    showToast('Saved to Tags');
+                }
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+            }
+        }
+
         // ==================== Initialize ====================
         window.addEventListener('load', () => {
             // Load app theme
@@ -1537,6 +1576,15 @@ ${preview.innerHTML}
             
             // Load content theme
             initContentThemes();
+            
+            // Check if opened from Tags
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagsId = urlParams.get('tags_id');
+            
+            if (tagsId && loadFromTags(tagsId)) {
+                // Loaded from Tags
+                return;
+            }
             
             // Load saved content
             const savedContent = localStorage.getItem('markdownContent');

@@ -1579,8 +1579,68 @@
                 setTheme(currentTheme);
             }
             
+            // Check if opened from Tags with a file ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagsId = urlParams.get('tags_id');
+            
+            if (tagsId) {
+                loadFromTags(tagsId);
+            }
+            
             renderSlidesList();
             renderCurrentSlide();
+        }
+        
+        // ==================== TAGS INTEGRATION ====================
+        function loadFromTags(tagsId) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const file = tagsFiles.find(f => f.id === tagsId);
+                
+                if (file && file.type === 'pointer' && file.content) {
+                    // Parse the markdown content into slides
+                    const slideContents = file.content.split(/\n---\n/);
+                    slides = slideContents.map((content, i) => ({
+                        id: Date.now() + i,
+                        content: content.trim(),
+                        layout: 'default'
+                    }));
+                    
+                    // Store the tags ID for syncing back
+                    window.currentTagsId = tagsId;
+                    window.currentTagsName = file.name;
+                    
+                    currentSlideIndex = 0;
+                    renderSlidesList();
+                    renderCurrentSlide();
+                    showToast(`Opened "${file.name}" from Tags`);
+                } else {
+                    showToast('File not found in Tags');
+                }
+            } catch (e) {
+                console.error('Error loading from Tags:', e);
+                showToast('Error loading from Tags');
+            }
+        }
+        
+        function saveToTags() {
+            if (!window.currentTagsId) return;
+            
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const fileIndex = tagsFiles.findIndex(f => f.id === window.currentTagsId);
+                
+                if (fileIndex >= 0) {
+                    // Combine slides back into markdown
+                    const content = slides.map(s => s.content).join('\n\n---\n\n');
+                    tagsFiles[fileIndex].content = content;
+                    tagsFiles[fileIndex].updatedAt = Date.now();
+                    localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
+                    showToast('Saved to Tags');
+                }
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+            }
         }
 
         init();

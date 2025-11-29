@@ -331,6 +331,7 @@
         }
         
         .file-card {
+            position: relative;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -343,6 +344,31 @@
             border-color: var(--accent);
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .file-card:hover .open-btn {
+            opacity: 1;
+        }
+        
+        .open-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 6px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+            z-index: 10;
+        }
+        
+        .open-btn:hover {
+            background: var(--accent-hover);
         }
         
         .file-card.selected {
@@ -455,8 +481,9 @@
         }
         
         .file-row {
+            position: relative;
             display: grid;
-            grid-template-columns: 40px 1fr 120px 100px 100px 80px;
+            grid-template-columns: 40px 1fr 120px 100px 100px 80px 70px;
             gap: 16px;
             align-items: center;
             padding: 12px 16px;
@@ -468,6 +495,27 @@
         
         .file-row:hover {
             background: var(--surface-hover);
+        }
+        
+        .file-row .row-open-btn {
+            padding: 6px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .file-row:hover .row-open-btn {
+            opacity: 1;
+        }
+        
+        .file-row .row-open-btn:hover {
+            background: var(--accent-hover);
         }
         
         .file-row.selected {
@@ -877,7 +925,8 @@
                     status: 'in-progress',
                     scope: 'we',
                     createdAt: Date.now() - 86400000 * 3,
-                    updatedAt: Date.now() - 3600000
+                    updatedAt: Date.now() - 3600000,
+                    content: `# Q4 Marketing Plan\n\n---\n\n## Goals\n\n- Increase brand awareness by 25%\n- Launch 3 new product campaigns\n- Grow social media following\n\n---\n\n## Timeline\n\n| Month | Focus |\n|-------|-------|\n| October | Campaign prep |\n| November | Launch |\n| December | Review |`
                 },
                 {
                     id: 'demo-2',
@@ -888,7 +937,8 @@
                     status: 'done',
                     scope: 'me',
                     createdAt: Date.now() - 86400000,
-                    updatedAt: Date.now() - 86400000
+                    updatedAt: Date.now() - 86400000,
+                    content: `# Meeting Notes\n\n**Date:** November 28, 2024\n**Attendees:** Team leads\n\n## Action Items\n\n- [ ] Review Q4 goals\n- [ ] Update roadmap\n- [x] Schedule follow-up\n\n## Discussion Points\n\nKey decisions made regarding the product launch timeline.`
                 },
                 {
                     id: 'demo-3',
@@ -899,7 +949,15 @@
                     status: 'in-progress',
                     scope: 'we',
                     createdAt: Date.now() - 86400000 * 7,
-                    updatedAt: Date.now() - 1800000
+                    updatedAt: Date.now() - 1800000,
+                    content: JSON.stringify({
+                        columns: ['Backlog', 'In Progress', 'Done'],
+                        cards: [
+                            { id: 1, column: 'Backlog', title: 'Setup CI/CD' },
+                            { id: 2, column: 'In Progress', title: 'API Integration' },
+                            { id: 3, column: 'Done', title: 'Database Design' }
+                        ]
+                    })
                 },
                 {
                     id: 'demo-4',
@@ -910,7 +968,14 @@
                     status: 'backlog',
                     scope: 'we',
                     createdAt: Date.now() - 86400000 * 14,
-                    updatedAt: Date.now() - 86400000 * 2
+                    updatedAt: Date.now() - 86400000 * 2,
+                    content: JSON.stringify({
+                        events: [
+                            { date: '2024-01', title: 'MVP Launch', description: 'Initial release' },
+                            { date: '2024-06', title: 'V2 Release', description: 'Major update' },
+                            { date: '2024-12', title: 'Enterprise', description: 'Enterprise features' }
+                        ]
+                    })
                 },
                 {
                     id: 'demo-5',
@@ -921,7 +986,8 @@
                     status: 'done',
                     scope: 'there',
                     createdAt: Date.now() - 86400000 * 5,
-                    updatedAt: Date.now() - 86400000
+                    updatedAt: Date.now() - 86400000,
+                    content: `# API Documentation\n\n## Endpoints\n\n### GET /users\n\nReturns a list of users.\n\n\`\`\`json\n{\n  "users": []\n}\n\`\`\`\n\n## Diagram\n\n\`\`\`mermaid\nsequenceDiagram\n    Client->>API: GET /users\n    API->>DB: Query users\n    DB-->>API: User list\n    API-->>Client: JSON response\n\`\`\``
                 },
                 {
                     id: 'demo-6',
@@ -932,7 +998,15 @@
                     status: 'in-progress',
                     scope: 'me',
                     createdAt: Date.now() - 86400000 * 30,
-                    updatedAt: Date.now() - 3600000 * 5
+                    updatedAt: Date.now() - 3600000 * 5,
+                    content: JSON.stringify({
+                        headers: ['Category', 'Budget', 'Spent', 'Remaining'],
+                        rows: [
+                            ['Marketing', 5000, 3200, 1800],
+                            ['Development', 10000, 8500, 1500],
+                            ['Operations', 3000, 2100, 900]
+                        ]
+                    })
                 },
                 {
                     id: 'demo-7',
@@ -943,7 +1017,8 @@
                     status: 'closed',
                     scope: 'us',
                     createdAt: Date.now() - 86400000 * 60,
-                    updatedAt: Date.now() - 86400000 * 30
+                    updatedAt: Date.now() - 86400000 * 30,
+                    content: `# Team Onboarding\n\n---\n\n## Welcome!\n\nWelcome to the team. This presentation covers everything you need to get started.\n\n---\n\n## First Week\n\n1. Setup your environment\n2. Meet the team\n3. Review documentation\n\n---\n\n## Resources\n\n- Company Wiki\n- Slack channels\n- Team calendar`
                 },
                 {
                     id: 'demo-8',
@@ -954,7 +1029,8 @@
                     status: 'backlog',
                     scope: 'me',
                     createdAt: Date.now() - 86400000 * 2,
-                    updatedAt: Date.now() - 86400000
+                    updatedAt: Date.now() - 86400000,
+                    content: `# Ideas & Brainstorm\n\n## Product Ideas\n\n- AI-powered search\n- Real-time collaboration\n- Mobile app\n\n## Features to Explore\n\n- Voice notes\n- OCR for images\n- Integration with calendars`
                 }
             ];
             saveToLocalStorage();
@@ -994,6 +1070,9 @@
                 <div class="file-card ${selectedFile?.id === file.id ? 'selected' : ''}" 
                      onclick="selectFile('${file.id}')" 
                      ondblclick="openFile('${file.id}')">
+                    <button class="open-btn" onclick="event.stopPropagation(); openFile('${file.id}')">
+                        Open ${app.icon}
+                    </button>
                     <div class="file-card-header">
                         <div class="file-icon ${file.type}">${app.icon}</div>
                         <div class="file-info">
@@ -1035,6 +1114,9 @@
                     </div>
                     <div>${file.folder}</div>
                     <div class="file-date">${formatDate(file.updatedAt)}</div>
+                    <button class="row-open-btn" onclick="event.stopPropagation(); openFile('${file.id}')">
+                        Open
+                    </button>
                 </div>
             `;
         }
@@ -1229,10 +1311,26 @@
             const file = files.find(f => f.id === id);
             if (!file) return;
             
-            // For now, just show a toast - later this will open the actual app
-            showToast(`Opening ${file.name} in ${appTypes[file.type].name}...`);
+            // Map app types to their HTML files
+            const appUrls = {
+                pointer: 'pointer.html',
+                slate: 'slate.html',
+                done: 'done.html',
+                journey: 'journey.html',
+                merman: 'merman.html',
+                metric: 'metric.html'
+            };
             
-            // In future: window.open(`${file.type}.html?id=${file.id}`, '_blank');
+            const appUrl = appUrls[file.type];
+            if (appUrl) {
+                // Open the app with the file ID as a query parameter
+                // The app can use this to load the file content
+                const url = `${appUrl}?tags_id=${file.id}`;
+                window.open(url, '_blank');
+                showToast(`Opening ${file.name} in ${appTypes[file.type].name}`);
+            } else {
+                showToast(`Unknown app type: ${file.type}`);
+            }
         }
         
         function updateFileStatus(id, status) {

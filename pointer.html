@@ -719,6 +719,11 @@
             transition: all 0.2s;
             position: relative;
             overflow: hidden;
+            padding: 0;
+            font: inherit;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .theme-option:hover {
@@ -1260,14 +1265,20 @@
             const themes = WorkSuiteThemes.getThemes();
             
             grid.innerHTML = themes.map(theme => `
-                <div class="theme-option ${theme.id === currentTheme ? 'active' : ''}" 
+                <button type="button" class="theme-option ${theme.id === currentTheme ? 'active' : ''}" 
                      data-theme="${theme.id}" 
                      data-name="${theme.name}"
-                     onclick="setTheme('${theme.id}')"
                      title="${theme.name}"
                      style="background: ${theme.colors.background}; border: 1px solid rgba(255,255,255,0.2);">
-                </div>
+                </button>
             `).join('');
+            
+            // Add click handlers
+            grid.querySelectorAll('.theme-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setTheme(btn.dataset.theme);
+                });
+            });
         }
 
         // ==================== NAVIGATION ====================

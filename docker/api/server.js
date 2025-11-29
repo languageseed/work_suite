@@ -14,6 +14,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
+const cookieParser = require('cookie-parser');
 
 // ===========================================
 // Configuration
@@ -23,6 +24,16 @@ const DATA_PATH = process.env.DATA_PATH || '/data';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const DB_PATH = path.join(DATA_PATH, 'worksuite.db');
 const FILES_PATH = path.join(DATA_PATH, 'files');
+
+// Authentik OAuth2 Configuration
+const AUTHENTIK_URL = process.env.AUTHENTIK_URL || 'http://192.168.0.110:9500';
+const AUTHENTIK_CLIENT_ID = process.env.AUTHENTIK_CLIENT_ID || 'work-suite';
+const AUTHENTIK_CLIENT_SECRET = process.env.AUTHENTIK_CLIENT_SECRET || '';
+const AUTHENTIK_CALLBACK_URL = process.env.AUTHENTIK_CALLBACK_URL || 'http://192.168.0.110:8500/api/auth/callback';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://192.168.0.110:8500';
+
+// Service-0 Core Platform (for session validation & workspaces)
+const SERVICE_0_URL = process.env.SERVICE_0_URL || 'http://192.168.0.110:8001';
 
 // ===========================================
 // Initialize Storage Directories
@@ -108,7 +119,11 @@ db.exec(`
 // Express App Setup
 // ===========================================
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [FRONTEND_URL, 'http://localhost:8500'],
+    credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 
 // File upload config
@@ -133,7 +148,13 @@ const upload = multer({
 // Auth Middleware
 // ===========================================
 const auth = (req, res, next) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    // Check Bearer token first (for API clients)
+    const bearerToken = req.headers.authorization?.replace('Bearer ', '');
+    // Then check session cookie (for browser clients)
+    const sessionToken = req.cookies?.worksuite_session;
+    
+    const token = bearerToken || sessionToken;
+    
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
     }
@@ -146,9 +167,12 @@ const auth = (req, res, next) => {
     }
 };
 
-// Optional auth - sets user if token present
+// Optional auth - sets user if token present (from header or cookie)
 const optionalAuth = (req, res, next) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const bearerToken = req.headers.authorization?.replace('Bearer ', '');
+    const sessionToken = req.cookies?.worksuite_session;
+    const token = bearerToken || sessionToken;
+    
     if (token) {
         try {
             req.user = jwt.verify(token, JWT_SECRET);
@@ -205,6 +229,179 @@ app.post('/auth/login', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// ===========================================
+// OAuth2/Authentik SSO Routes
+// ===========================================
+
+// Initiate OAuth2 login - redirects to Authentik
+app.get('/api/auth/login', (req, res) => {
+    const state = uuidv4(); // CSRF protection
+    const returnUrl = req.query.return || '/';
+    
+    // Store state and return URL in a cookie for verification
+    res.cookie('oauth_state', state, { 
+        httpOnly: true, 
+        maxAge: 600000, // 10 minutes
+        sameSite: 'lax'
+    });
+    res.cookie('oauth_return', returnUrl, { 
+        httpOnly: true, 
+        maxAge: 600000,
+        sameSite: 'lax'
+    });
+    
+    const authUrl = new URL(`${AUTHENTIK_URL}/application/o/authorize/`);
+    authUrl.searchParams.set('client_id', AUTHENTIK_CLIENT_ID);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('redirect_uri', AUTHENTIK_CALLBACK_URL);
+    authUrl.searchParams.set('scope', 'openid profile email');
+    authUrl.searchParams.set('state', state);
+    
+    res.redirect(authUrl.toString());
+});
+
+// OAuth2 callback - exchanges code for tokens
+app.get('/api/auth/callback', async (req, res) => {
+    try {
+        const { code, state } = req.query;
+        const storedState = req.cookies.oauth_state;
+        const returnUrl = req.cookies.oauth_return || '/';
+        
+        // Verify state to prevent CSRF
+        if (!state || state !== storedState) {
+            return res.status(400).send('Invalid state parameter');
+        }
+        
+        // Clear the state cookies
+        res.clearCookie('oauth_state');
+        res.clearCookie('oauth_return');
+        
+        // Exchange authorization code for tokens
+        const tokenResponse = await fetch(`${AUTHENTIK_URL}/application/o/token/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: AUTHENTIK_CALLBACK_URL,
+                client_id: AUTHENTIK_CLIENT_ID,
+                client_secret: AUTHENTIK_CLIENT_SECRET,
+            }),
+        });
+        
+        if (!tokenResponse.ok) {
+            const error = await tokenResponse.text();
+            console.error('Token exchange failed:', error);
+            return res.status(401).send('Authentication failed');
+        }
+        
+        const tokens = await tokenResponse.json();
+        
+        // Get user info from Authentik
+        const userInfoResponse = await fetch(`${AUTHENTIK_URL}/application/o/userinfo/`, {
+            headers: {
+                'Authorization': `Bearer ${tokens.access_token}`,
+            },
+        });
+        
+        if (!userInfoResponse.ok) {
+            return res.status(401).send('Failed to get user info');
+        }
+        
+        const userInfo = await userInfoResponse.json();
+        
+        // Create or update local user record
+        const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(userInfo.email);
+        let userId;
+        
+        if (existingUser) {
+            userId = existingUser.id;
+            db.prepare(`
+                UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+            `).run(userInfo.name || userInfo.preferred_username, userId);
+        } else {
+            userId = uuidv4();
+            db.prepare(`
+                INSERT INTO users (id, email, password_hash, display_name)
+                VALUES (?, ?, ?, ?)
+            `).run(userId, userInfo.email, 'oauth-user', userInfo.name || userInfo.preferred_username);
+        }
+        
+        // Create a session token
+        const sessionToken = jwt.sign({
+            id: userId,
+            email: userInfo.email,
+            name: userInfo.name || userInfo.preferred_username,
+            authentik_sub: userInfo.sub,
+        }, JWT_SECRET, { expiresIn: '7d' });
+        
+        // Set session cookie
+        res.cookie('worksuite_session', sessionToken, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            sameSite: 'lax',
+            secure: process.env.SECURE_COOKIES === 'true',
+        });
+        
+        // Also store tokens for potential API calls
+        res.cookie('worksuite_access_token', tokens.access_token, {
+            httpOnly: true,
+            maxAge: tokens.expires_in * 1000,
+            sameSite: 'lax',
+            secure: process.env.SECURE_COOKIES === 'true',
+        });
+        
+        // Redirect to frontend
+        res.redirect(FRONTEND_URL + returnUrl);
+    } catch (err) {
+        console.error('OAuth callback error:', err);
+        res.status(500).send('Authentication error');
+    }
+});
+
+// Get current session info
+app.get('/api/auth/session', (req, res) => {
+    const sessionToken = req.cookies.worksuite_session;
+    
+    if (!sessionToken) {
+        return res.json({ authenticated: false });
+    }
+    
+    try {
+        const decoded = jwt.verify(sessionToken, JWT_SECRET);
+        res.json({
+            authenticated: true,
+            user: {
+                id: decoded.id,
+                email: decoded.email,
+                name: decoded.name,
+            }
+        });
+    } catch (err) {
+        res.clearCookie('worksuite_session');
+        res.json({ authenticated: false });
+    }
+});
+
+// Logout - clear session
+app.get('/api/auth/logout', (req, res) => {
+    res.clearCookie('worksuite_session');
+    res.clearCookie('worksuite_access_token');
+    
+    // Redirect to Authentik logout (optional - for full SSO logout)
+    const logoutUrl = `${AUTHENTIK_URL}/application/o/work-suite/end-session/`;
+    res.redirect(logoutUrl);
+});
+
+// Simple logout without Authentik redirect
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('worksuite_session');
+    res.clearCookie('worksuite_access_token');
+    res.json({ success: true });
 });
 
 // ===========================================

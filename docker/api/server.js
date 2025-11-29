@@ -74,6 +74,8 @@ db.exec(`
         content TEXT,
         file_path TEXT,
         owner_id TEXT,
+        workspace_id TEXT,
+        service0_object_id TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
@@ -405,11 +407,228 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ===========================================
+// Service-0 Integration (Workspaces & Objects)
+// ===========================================
+
+// Helper: Forward request to Service-0 with session
+async function service0Request(method, path, body = null, sessionToken = null) {
+    const headers = {
+        'Content-Type': 'application/json',
+    };
+    if (sessionToken) {
+        headers['X-Session-Token'] = sessionToken;
+    }
+    
+    const options = {
+        method,
+        headers,
+    };
+    if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+        options.body = JSON.stringify(body);
+    }
+    
+    try {
+        const response = await fetch(`${SERVICE_0_URL}${path}`, options);
+        const data = await response.json();
+        return { ok: response.ok, status: response.status, data };
+    } catch (err) {
+        console.error('Service-0 request failed:', err.message);
+        return { ok: false, status: 500, data: { error: 'Service unavailable' } };
+    }
+}
+
+// Get current user's workspaces from Service-0
+app.get('/api/workspaces', auth, async (req, res) => {
+    try {
+        // Get user's workspaces from Service-0
+        const result = await service0Request(
+            'GET',
+            `/api/v1/users/${req.user.id}/workspaces`
+        );
+        
+        if (result.ok) {
+            res.json(result.data);
+        } else {
+            // If user doesn't exist in Service-0, return empty list
+            res.json([]);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Create a new workspace
+app.post('/api/workspaces', auth, async (req, res) => {
+    try {
+        const { name, description, type } = req.body;
+        
+        const result = await service0Request('POST', '/api/v1/workspaces', {
+            name,
+            description,
+            owner_id: req.user.id,
+            type: type || 'personal',
+            settings: { source: 'work-suite' }
+        });
+        
+        if (result.ok) {
+            res.status(201).json(result.data);
+        } else {
+            res.status(result.status).json(result.data);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get workspace by ID
+app.get('/api/workspaces/:workspaceId', auth, async (req, res) => {
+    try {
+        const result = await service0Request(
+            'GET',
+            `/api/v1/workspaces/${req.params.workspaceId}`
+        );
+        
+        if (result.ok) {
+            res.json(result.data);
+        } else {
+            res.status(result.status).json(result.data);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Register an object (file) with Service-0 for cross-service sharing
+app.post('/api/objects', auth, async (req, res) => {
+    try {
+        const { workspace_id, item_id, name, object_type } = req.body;
+        
+        // Verify the item exists locally
+        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(item_id);
+        if (!item) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+        
+        // Register with Service-0
+        const result = await service0Request('POST', '/api/v1/objects', {
+            workspace_id,
+            object_type: object_type || item.type || 'file',
+            source_service: 'work-suite',
+            source_id: item_id,
+            name: name || item.name,
+            metadata: {
+                app: item.app,
+                scope: item.scope,
+                status: item.status,
+                created_at: item.created_at
+            }
+        });
+        
+        if (result.ok) {
+            // Update local item with Service-0 object ID
+            db.prepare(`
+                UPDATE items SET 
+                    workspace_id = ?,
+                    service0_object_id = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `).run(workspace_id, result.data.object_id, item_id);
+            
+            res.status(201).json(result.data);
+        } else {
+            res.status(result.status).json(result.data);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get objects for a workspace
+app.get('/api/objects', auth, async (req, res) => {
+    try {
+        const { workspace_id } = req.query;
+        
+        if (!workspace_id) {
+            return res.status(400).json({ error: 'workspace_id required' });
+        }
+        
+        const result = await service0Request(
+            'GET',
+            `/api/v1/objects?workspace_id=${workspace_id}`
+        );
+        
+        if (result.ok) {
+            // Enrich with local item data
+            const objects = result.data.map(obj => {
+                if (obj.source_service === 'work-suite') {
+                    const localItem = db.prepare('SELECT * FROM items WHERE id = ?').get(obj.source_id);
+                    if (localItem) {
+                        return { ...obj, local_item: localItem };
+                    }
+                }
+                return obj;
+            });
+            res.json(objects);
+        } else {
+            res.json([]);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Sync user to Service-0 (create if not exists)
+app.post('/api/sync-user', auth, async (req, res) => {
+    try {
+        // Check if user exists in Service-0
+        const checkResult = await service0Request(
+            'GET',
+            `/api/v1/users/by-email/${encodeURIComponent(req.user.email)}`
+        );
+        
+        if (checkResult.ok) {
+            res.json({ synced: true, user: checkResult.data });
+            return;
+        }
+        
+        // Create user in Service-0
+        const createResult = await service0Request('POST', '/api/v1/users', {
+            user_id: req.user.id,
+            email: req.user.email,
+            display_name: req.user.name,
+            auth_provider: 'authentik',
+            auth_provider_id: req.user.authentik_sub
+        });
+        
+        if (createResult.ok) {
+            // Create default personal workspace
+            const wsResult = await service0Request('POST', '/api/v1/workspaces', {
+                name: 'My Work Suite',
+                description: 'Personal workspace',
+                owner_id: req.user.id,
+                type: 'personal',
+                settings: { source: 'work-suite', auto_created: true }
+            });
+            
+            res.json({ 
+                synced: true, 
+                user: createResult.data,
+                workspace: wsResult.ok ? wsResult.data : null
+            });
+        } else {
+            res.status(createResult.status).json(createResult.data);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ===========================================
 // Items (Files/Content) Routes
 // ===========================================
 app.get('/items', optionalAuth, (req, res) => {
     try {
-        const { scope, folder, status, app, tag } = req.query;
+        const { scope, folder, status, app, tag, workspace_id } = req.query;
         let query = 'SELECT * FROM items WHERE 1=1';
         const params = [];
         
@@ -428,6 +647,10 @@ app.get('/items', optionalAuth, (req, res) => {
         if (app) {
             query += ' AND app = ?';
             params.push(app);
+        }
+        if (workspace_id) {
+            query += ' AND workspace_id = ?';
+            params.push(workspace_id);
         }
         
         query += ' ORDER BY updated_at DESC';
@@ -461,13 +684,13 @@ app.get('/items', optionalAuth, (req, res) => {
 
 app.post('/items', optionalAuth, (req, res) => {
     try {
-        const { name, type, app, scope, folder, status, content, tags } = req.body;
+        const { name, type, app, scope, folder, status, content, tags, workspace_id } = req.body;
         const id = uuidv4();
         
         db.prepare(`
-            INSERT INTO items (id, name, type, app, scope, folder, status, content, owner_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(id, name, type, app, scope || 'me', folder, status || 'backlog', content, req.user?.id);
+            INSERT INTO items (id, name, type, app, scope, folder, status, content, owner_id, workspace_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(id, name, type, app, scope || 'me', folder, status || 'backlog', content, req.user?.id, workspace_id || null);
         
         // Add tags
         if (tags && tags.length > 0) {

@@ -1259,15 +1259,58 @@
         // ==================== TAGS INTEGRATION ====================
         let currentTagsId = null;
         
-        function loadFromTags(tagsId) {
+        async function loadFromTags(tagsId) {
             try {
+                // First try to fetch from the API
+                const apiResponse = await fetch(`/api/items/${tagsId}`);
+                if (apiResponse.ok) {
+                    const file = await apiResponse.json();
+                    if (file && file.app === 'done' && file.content) {
+                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        
+                        // Handle both API format (columns array with cards) and legacy format
+                        if (content.columns && Array.isArray(content.columns)) {
+                            if (content.columns[0] && typeof content.columns[0] === 'object') {
+                                // New format: columns with embedded cards
+                                columns = content.columns;
+                            } else {
+                                // Legacy format: columns as strings, cards separate
+                                columns = content.columns.map(colName => ({
+                                    id: colName.toLowerCase().replace(/\s+/g, '-'),
+                                    title: colName,
+                                    cards: (content.cards || [])
+                                        .filter(c => c.column === colName)
+                                        .map(c => ({
+                                            id: 'card_' + c.id,
+                                            title: c.title,
+                                            description: c.description || '',
+                                            due: c.due || '',
+                                            labels: c.labels || []
+                                        }))
+                                }));
+                            }
+                        }
+                        
+                        if (content.theme) {
+                            currentTheme = content.theme;
+                            document.body.setAttribute('data-theme', content.theme);
+                        }
+                        
+                        currentTagsId = tagsId;
+                        boardTitle.value = content.title || file.name;
+                        render();
+                        showToast(`Opened "${file.name}" from Tags`);
+                        return true;
+                    }
+                }
+                
+                // Fallback to localStorage
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const file = tagsFiles.find(f => f.id === tagsId);
                 
                 if (file && file.type === 'done' && file.content) {
-                    const data = JSON.parse(file.content);
+                    const data = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
                     
-                    // Convert Tags format to Done format
                     if (data.columns && data.cards) {
                         columns = data.columns.map(colName => ({
                             id: colName.toLowerCase().replace(/\s+/g, '-'),
@@ -1296,13 +1339,77 @@
             return false;
         }
         
-        function saveToTags() {
+        async function saveToTags() {
+            try {
+                const title = boardTitle.value || 'Untitled Board';
+                const content = {
+                    title: title,
+                    theme: currentTheme,
+                    columns: columns.map(col => ({
+                        id: col.id,
+                        title: col.title,
+                        cards: col.cards.map(card => ({
+                            id: card.id,
+                            title: card.title,
+                            description: card.description,
+                            due: card.due,
+                            labels: card.labels
+                        }))
+                    }))
+                };
+                
+                if (currentTagsId) {
+                    // Update existing entry via API
+                    const response = await fetch(`/api/items/${currentTagsId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Saved to Tags ✓');
+                        return;
+                    }
+                } else {
+                    // Create new entry via API
+                    const response = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            type: 'file',
+                            app: 'done',
+                            scope: 'me',
+                            folder: 'Boards',
+                            status: 'in-progress',
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentTagsId = data.id;
+                        showToast('Saved to Tags ✓');
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                saveToLocalStorageTags(title, content);
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                const title = boardTitle.value || 'Untitled Board';
+                saveToLocalStorageTags(title, null);
+            }
+        }
+        
+        function saveToLocalStorageTags(title, contentObj) {
             try {
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const title = boardTitle.value || 'Untitled Board';
-                
-                // Convert to Tags format
-                const content = JSON.stringify({
+                const content = contentObj ? JSON.stringify(contentObj) : JSON.stringify({
                     columns: columns.map(c => c.title),
                     cards: columns.flatMap(col => 
                         col.cards.map(card => ({
@@ -1315,7 +1422,6 @@
                 });
                 
                 if (currentTagsId) {
-                    // Update existing Tags entry
                     const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
                     if (fileIndex >= 0) {
                         tagsFiles[fileIndex].content = content;
@@ -1323,7 +1429,6 @@
                         tagsFiles[fileIndex].updatedAt = Date.now();
                     }
                 } else {
-                    // Create new Tags entry
                     currentTagsId = 'done-' + Date.now();
                     const newEntry = {
                         id: currentTagsId,
@@ -1341,10 +1446,10 @@
                 }
                 
                 localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                showToast('Saved to Tags ✓');
+                showToast('Saved to Tags (local) ✓');
             } catch (e) {
-                console.error('Error saving to Tags:', e);
-                showToast('Error saving to Tags');
+                console.error('Error saving to localStorage:', e);
+                showToast('Error saving');
             }
         }
         

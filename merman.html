@@ -1554,8 +1554,27 @@ ${preview.innerHTML}
         // ==================== Tags Integration ====================
         let currentTagsId = null;
         
-        function loadFromTags(tagsId) {
+        async function loadFromTags(tagsId) {
             try {
+                // First try to fetch from the API
+                const apiResponse = await fetch(`/api/items/${tagsId}`);
+                if (apiResponse.ok) {
+                    const file = await apiResponse.json();
+                    if (file && file.app === 'merman' && file.content) {
+                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        
+                        // Handle both formats: raw markdown string or object with content
+                        const markdownContent = typeof content === 'string' ? content : (content.content || '');
+                        
+                        editor.value = markdownContent;
+                        currentTagsId = tagsId;
+                        updatePreview();
+                        showToast(`Opened "${file.name}" from Tags`);
+                        return true;
+                    }
+                }
+                
+                // Fallback to localStorage
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const file = tagsFiles.find(f => f.id === tagsId);
                 
@@ -1572,25 +1591,78 @@ ${preview.innerHTML}
             return false;
         }
         
-        function saveToTags() {
+        async function saveToTags() {
             try {
-                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const content = editor.value;
+                const markdownContent = editor.value;
                 
                 // Extract title from first heading or use default
-                const titleMatch = content.match(/^#\s+(.+)$/m);
+                const titleMatch = markdownContent.match(/^#\s+(.+)$/m);
                 const title = titleMatch ? titleMatch[1] : 'Untitled Document';
                 
+                const content = { content: markdownContent };
+                
                 if (currentTagsId) {
-                    // Update existing Tags entry
+                    // Update existing entry via API
+                    const response = await fetch(`/api/items/${currentTagsId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Saved to Tags ✓', 'success');
+                        return;
+                    }
+                } else {
+                    // Create new entry via API
+                    const response = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            type: 'file',
+                            app: 'merman',
+                            scope: 'me',
+                            folder: 'Documents',
+                            status: 'done',
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentTagsId = data.id;
+                        showToast('Saved to Tags ✓', 'success');
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                saveToLocalStorageTags(title, markdownContent);
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                const markdownContent = editor.value;
+                const titleMatch = markdownContent.match(/^#\s+(.+)$/m);
+                const title = titleMatch ? titleMatch[1] : 'Untitled Document';
+                saveToLocalStorageTags(title, markdownContent);
+            }
+        }
+        
+        function saveToLocalStorageTags(title, markdownContent) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                
+                if (currentTagsId) {
                     const fileIndex = tagsFiles.findIndex(f => f.id === currentTagsId);
                     if (fileIndex >= 0) {
-                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].content = markdownContent;
                         tagsFiles[fileIndex].name = title;
                         tagsFiles[fileIndex].updatedAt = Date.now();
                     }
                 } else {
-                    // Create new Tags entry
                     currentTagsId = 'merman-' + Date.now();
                     const newEntry = {
                         id: currentTagsId,
@@ -1600,7 +1672,7 @@ ${preview.innerHTML}
                         tags: ['markdown'],
                         status: 'done',
                         scope: 'me',
-                        content: content,
+                        content: markdownContent,
                         createdAt: Date.now(),
                         updatedAt: Date.now()
                     };
@@ -1608,10 +1680,10 @@ ${preview.innerHTML}
                 }
                 
                 localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                showToast('Saved to Tags ✓', 'success');
+                showToast('Saved to Tags (local) ✓', 'success');
             } catch (e) {
-                console.error('Error saving to Tags:', e);
-                showToast('Error saving to Tags', 'error');
+                console.error('Error saving to localStorage:', e);
+                showToast('Error saving', 'error');
             }
         }
 

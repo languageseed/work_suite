@@ -1612,13 +1612,61 @@
         }
         
         // ==================== TAGS INTEGRATION ====================
-        function loadFromTags(tagsId) {
+        async function loadFromTags(tagsId) {
             try {
+                // First try to fetch from the API
+                const apiResponse = await fetch(`/api/items/${tagsId}`);
+                if (apiResponse.ok) {
+                    const file = await apiResponse.json();
+                    if (file && file.app === 'pointer' && file.content) {
+                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        
+                        // Handle both formats: slides array or markdown string
+                        if (content.slides && Array.isArray(content.slides)) {
+                            slides = content.slides.map((s, i) => ({
+                                id: Date.now() + i,
+                                content: s.content || '',
+                                layout: s.layout || 'default'
+                            }));
+                        } else if (typeof content === 'string') {
+                            // Parse markdown content
+                            const slideContents = content.split(/\n---\n/);
+                            slides = slideContents.map((c, i) => ({
+                                id: Date.now() + i,
+                                content: c.trim(),
+                                layout: 'default'
+                            }));
+                        }
+                        
+                        // Apply theme if specified
+                        if (content.theme) {
+                            currentTheme = content.theme;
+                            document.body.setAttribute('data-theme', content.theme);
+                        }
+                        
+                        // Set title
+                        if (content.title) {
+                            deckTitle.value = content.title;
+                        } else if (file.name) {
+                            deckTitle.value = file.name;
+                        }
+                        
+                        window.currentTagsId = tagsId;
+                        window.currentTagsName = file.name;
+                        
+                        currentSlideIndex = 0;
+                        renderSlidesList();
+                        renderCurrentSlide();
+                        showToast(`Opened "${file.name}" from Tags`);
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage (Tags app demo data)
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const file = tagsFiles.find(f => f.id === tagsId);
                 
                 if (file && file.type === 'pointer' && file.content) {
-                    // Parse the markdown content into slides
                     const slideContents = file.content.split(/\n---\n/);
                     slides = slideContents.map((content, i) => ({
                         id: Date.now() + i,
@@ -1626,7 +1674,6 @@
                         layout: 'default'
                     }));
                     
-                    // Store the tags ID for syncing back
                     window.currentTagsId = tagsId;
                     window.currentTagsName = file.name;
                     
@@ -1643,22 +1690,85 @@
             }
         }
         
-        function saveToTags() {
+        async function saveToTags() {
             try {
-                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
-                const content = slides.map(s => s.content).join('\n\n---\n\n');
                 const title = deckTitle.value || 'Untitled Presentation';
+                const content = {
+                    title: title,
+                    theme: currentTheme,
+                    slides: slides.map(s => ({
+                        id: s.id,
+                        content: s.content,
+                        layout: s.layout || 'default'
+                    }))
+                };
                 
                 if (window.currentTagsId) {
-                    // Update existing Tags entry
+                    // Update existing entry via API
+                    const response = await fetch(`/api/items/${window.currentTagsId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Saved to Tags ✓');
+                    } else {
+                        // Fallback to localStorage
+                        saveToLocalStorage(title, content);
+                    }
+                } else {
+                    // Create new entry via API
+                    const response = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            type: 'file',
+                            app: 'pointer',
+                            scope: 'me',
+                            folder: 'Presentations',
+                            status: 'done',
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        window.currentTagsId = data.id;
+                        showToast('Saved to Tags ✓');
+                    } else {
+                        // Fallback to localStorage
+                        saveToLocalStorage(title, content);
+                    }
+                }
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                // Fallback to localStorage on network error
+                const title = deckTitle.value || 'Untitled Presentation';
+                const content = slides.map(s => s.content).join('\n\n---\n\n');
+                saveToLocalStorage(title, content);
+            }
+        }
+        
+        function saveToLocalStorage(title, content) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const markdownContent = typeof content === 'object' 
+                    ? content.slides.map(s => s.content).join('\n\n---\n\n')
+                    : content;
+                
+                if (window.currentTagsId) {
                     const fileIndex = tagsFiles.findIndex(f => f.id === window.currentTagsId);
                     if (fileIndex >= 0) {
-                        tagsFiles[fileIndex].content = content;
+                        tagsFiles[fileIndex].content = markdownContent;
                         tagsFiles[fileIndex].name = title;
                         tagsFiles[fileIndex].updatedAt = Date.now();
                     }
                 } else {
-                    // Create new Tags entry
                     const newTagsId = 'pointer-' + Date.now();
                     const newEntry = {
                         id: newTagsId,
@@ -1668,7 +1778,7 @@
                         tags: ['presentation'],
                         status: 'done',
                         scope: 'me',
-                        content: content,
+                        content: markdownContent,
                         createdAt: Date.now(),
                         updatedAt: Date.now()
                     };
@@ -1677,10 +1787,10 @@
                 }
                 
                 localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                showToast('Saved to Tags ✓');
+                showToast('Saved to Tags (local) ✓');
             } catch (e) {
-                console.error('Error saving to Tags:', e);
-                showToast('Error saving to Tags');
+                console.error('Error saving to localStorage:', e);
+                showToast('Error saving');
             }
         }
 

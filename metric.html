@@ -1592,24 +1592,61 @@
         // ==================== TAGS INTEGRATION ====================
         let currentTagsId = null;
         
-        function loadFromTags(tagsId) {
+        async function loadFromTags(tagsId) {
             try {
+                // First try to fetch from the API
+                const apiResponse = await fetch(`/api/items/${tagsId}`);
+                if (apiResponse.ok) {
+                    const file = await apiResponse.json();
+                    if (file && file.app === 'metric' && file.content) {
+                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        
+                        // Handle both new format (cells/formulas) and legacy format (headers/rows)
+                        data = {};
+                        if (content.cells) {
+                            // New format: direct cell mapping
+                            Object.keys(content.cells).forEach(cellRef => {
+                                data[cellRef] = { 
+                                    value: String(content.cells[cellRef]), 
+                                    formula: content.formulas?.[cellRef] || ''
+                                };
+                            });
+                        } else if (content.headers && content.rows) {
+                            // Legacy format: headers/rows table
+                            content.headers.forEach((header, colIndex) => {
+                                const col = String.fromCharCode(65 + colIndex);
+                                data[`${col}1`] = { value: String(header), formula: '' };
+                            });
+                            content.rows.forEach((row, rowIndex) => {
+                                row.forEach((cell, colIndex) => {
+                                    const col = String.fromCharCode(65 + colIndex);
+                                    data[`${col}${rowIndex + 2}`] = { value: String(cell), formula: '' };
+                                });
+                            });
+                        }
+                        
+                        currentTagsId = tagsId;
+                        sheetName.value = content.title || file.name;
+                        renderSpreadsheet();
+                        selectCell('A1');
+                        showToast(`Opened "${file.name}" from Tags`);
+                        return true;
+                    }
+                }
+                
+                // Fallback to localStorage
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const file = tagsFiles.find(f => f.id === tagsId);
                 
                 if (file && file.type === 'metric' && file.content) {
-                    const tableData = JSON.parse(file.content);
+                    const tableData = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
                     
-                    // Convert table format to spreadsheet format
                     data = {};
                     if (tableData.headers && tableData.rows) {
-                        // Add headers
                         tableData.headers.forEach((header, colIndex) => {
                             const col = String.fromCharCode(65 + colIndex);
                             data[`${col}1`] = { value: String(header), formula: '' };
                         });
-                        
-                        // Add rows
                         tableData.rows.forEach((row, rowIndex) => {
                             row.forEach((cell, colIndex) => {
                                 const col = String.fromCharCode(65 + colIndex);
@@ -1630,19 +1667,81 @@
             return false;
         }
         
-        function saveToTags() {
+        async function saveToTags() {
             try {
-                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const title = sheetName.value || 'Untitled Sheet';
                 
-                // Convert spreadsheet to table format
+                // Convert spreadsheet to API format (cells and formulas)
                 const usedCells = Object.keys(data).filter(k => data[k].value || data[k].formula);
                 if (usedCells.length === 0) {
                     showToast('Nothing to save');
                     return;
                 }
                 
-                // Find used range
+                const cells = {};
+                const formulas = {};
+                
+                usedCells.forEach(cellRef => {
+                    const cell = data[cellRef];
+                    if (cell.value) cells[cellRef] = cell.value;
+                    if (cell.formula) formulas[cellRef] = cell.formula;
+                });
+                
+                const content = { title, cells, formulas };
+                
+                if (currentTagsId) {
+                    // Update existing entry via API
+                    const response = await fetch(`/api/items/${currentTagsId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showToast('Saved to Tags ✓');
+                        return;
+                    }
+                } else {
+                    // Create new entry via API
+                    const response = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: title,
+                            type: 'file',
+                            app: 'metric',
+                            scope: 'me',
+                            folder: 'Sheets',
+                            status: 'done',
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentTagsId = data.id;
+                        showToast('Saved to Tags ✓');
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                saveToLocalStorageTags(title);
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                const title = sheetName.value || 'Untitled Sheet';
+                saveToLocalStorageTags(title);
+            }
+        }
+        
+        function saveToLocalStorageTags(title) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                
+                const usedCells = Object.keys(data).filter(k => data[k].value || data[k].formula);
                 const cols = [...new Set(usedCells.map(c => c.match(/[A-Z]+/)[0]))].sort();
                 const rows = [...new Set(usedCells.map(c => parseInt(c.match(/\d+/)[0])))].sort((a,b) => a-b);
                 
@@ -1685,10 +1784,10 @@
                 }
                 
                 localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                showToast('Saved to Tags ✓');
+                showToast('Saved to Tags (local) ✓');
             } catch (e) {
-                console.error('Error saving to Tags:', e);
-                showToast('Error saving to Tags');
+                console.error('Error saving to localStorage:', e);
+                showToast('Error saving');
             }
         }
         

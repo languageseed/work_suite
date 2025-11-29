@@ -1050,22 +1050,59 @@
         }
         
         // ==================== TAGS INTEGRATION ====================
-        function loadFromTags(tagsId) {
+        async function loadFromTags(tagsId) {
             try {
+                // First try to fetch from the API
+                const apiResponse = await fetch(`/api/items/${tagsId}`);
+                if (apiResponse.ok) {
+                    const file = await apiResponse.json();
+                    if (file && file.app === 'slate' && file.content) {
+                        const content = typeof file.content === 'string' ? JSON.parse(file.content) : file.content;
+                        
+                        // Create or update a note with the API content
+                        let noteToOpen = notes.find(n => n.tagsId === tagsId);
+                        const noteContent = content.content || content;
+                        const noteTitle = content.title || file.name;
+                        const noteTags = content.tags || file.tags || [];
+                        
+                        if (noteToOpen) {
+                            noteToOpen.content = noteContent;
+                            noteToOpen.title = noteTitle;
+                            noteToOpen.tags = noteTags;
+                            saveToLocalStorage();
+                        } else {
+                            noteToOpen = {
+                                id: Date.now(),
+                                tagsId: tagsId,
+                                title: noteTitle,
+                                content: noteContent,
+                                tags: noteTags,
+                                createdAt: file.created_at || new Date().toISOString(),
+                                updatedAt: new Date().toISOString()
+                            };
+                            notes.unshift(noteToOpen);
+                            saveToLocalStorage();
+                        }
+                        
+                        renderNotes();
+                        openNote(noteToOpen.id);
+                        showNotification(`Opened "${noteTitle}" from Tags`);
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage (Tags app demo data)
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 const file = tagsFiles.find(f => f.id === tagsId);
                 
                 if (file && file.type === 'slate' && file.content) {
-                    // Create or update a note with the Tags content
                     let noteToOpen = notes.find(n => n.tagsId === tagsId);
                     
                     if (noteToOpen) {
-                        // Update existing linked note with latest content
                         noteToOpen.content = file.content;
                         noteToOpen.title = file.name;
                         saveToLocalStorage();
                     } else {
-                        // Create new note from Tags file
                         noteToOpen = {
                             id: Date.now(),
                             tagsId: tagsId,
@@ -1079,7 +1116,6 @@
                         saveToLocalStorage();
                     }
                     
-                    // Open the note in the editor
                     renderNotes();
                     openNote(noteToOpen.id);
                     showNotification(`Opened "${file.name}" from Tags`);
@@ -1092,15 +1128,70 @@
             }
         }
         
-        function saveToTags(noteToSave) {
+        async function saveToTags(noteToSave) {
             const note = noteToSave || notes.find(n => n.id === editingNoteId);
             if (!note) return;
             
             try {
+                const content = {
+                    title: note.title,
+                    content: note.content,
+                    tags: note.tags || []
+                };
+                
+                if (note.tagsId) {
+                    // Update existing entry via API
+                    const response = await fetch(`/api/items/${note.tagsId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: note.title,
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Saved to Tags ✓');
+                        return;
+                    }
+                } else {
+                    // Create new entry via API
+                    const response = await fetch('/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: note.title || 'Untitled Note',
+                            type: 'file',
+                            app: 'slate',
+                            scope: 'me',
+                            folder: 'Notes',
+                            status: 'done',
+                            content: content
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        note.tagsId = data.id;
+                        saveToLocalStorage();
+                        showNotification('Saved to Tags ✓');
+                        return;
+                    }
+                }
+                
+                // Fallback to localStorage
+                saveToLocalStorageTags(note);
+            } catch (e) {
+                console.error('Error saving to Tags:', e);
+                saveToLocalStorageTags(note);
+            }
+        }
+        
+        function saveToLocalStorageTags(note) {
+            try {
                 const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
                 
                 if (note.tagsId) {
-                    // Update existing Tags entry
                     const fileIndex = tagsFiles.findIndex(f => f.id === note.tagsId);
                     if (fileIndex >= 0) {
                         tagsFiles[fileIndex].content = note.content;
@@ -1109,7 +1200,6 @@
                         tagsFiles[fileIndex].updatedAt = Date.now();
                     }
                 } else {
-                    // Create new Tags entry
                     const newTagsId = 'slate-' + Date.now();
                     const newEntry = {
                         id: newTagsId,
@@ -1124,17 +1214,15 @@
                         updatedAt: Date.now()
                     };
                     tagsFiles.unshift(newEntry);
-                    
-                    // Link the note to Tags
                     note.tagsId = newTagsId;
                     saveToLocalStorage();
                 }
                 
                 localStorage.setItem('tags-files', JSON.stringify(tagsFiles));
-                showNotification('Saved to Tags ✓');
+                showNotification('Saved to Tags (local) ✓');
             } catch (e) {
-                console.error('Error saving to Tags:', e);
-                showNotification('Error saving to Tags', 'error');
+                console.error('Error saving to localStorage:', e);
+                showNotification('Error saving', 'error');
             }
         }
         

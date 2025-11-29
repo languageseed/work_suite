@@ -153,26 +153,6 @@
             gap: 16px;
         }
 
-        .home-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-            text-decoration: none;
-            font-size: 18px;
-            transition: all 0.2s;
-            margin-right: 12px;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-        }
-        
-        .home-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-        }
-        
         .logo {
             display: flex;
             align-items: center;
@@ -985,7 +965,6 @@
 <body>
     <div class="app" data-theme="midnight">
         <header>
-            <a href="index.html" class="home-btn" title="Back to Work Suite">🧰</a>
             <div class="logo">
                 <div class="logo-icon">👆</div>
                 <span>Pointer</span>
@@ -1591,18 +1570,12 @@
             loadFromLocalStorage();
             
             // Initialize content themes
+            renderThemeGrid();
             if (typeof WorkSuiteThemes !== 'undefined') {
-                // Load custom themes from localStorage
-                if (WorkSuiteThemes.loadCustomThemes) {
-                    WorkSuiteThemes.loadCustomThemes();
-                }
                 // Use shared preference if no local theme saved
                 if (!currentTheme || currentTheme === 'midnight') {
                     currentTheme = WorkSuiteThemes.loadPreference();
                 }
-            }
-            renderThemeGrid();
-            if (typeof WorkSuiteThemes !== 'undefined') {
                 setTheme(currentTheme);
             }
             

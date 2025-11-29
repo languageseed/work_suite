@@ -521,14 +521,6 @@ const WorkSuiteThemes = (function() {
     function generateCSSVariables(theme) {
         if (!theme) return '';
         
-        // Safely get style values with defaults
-        const styles = theme.styles || {};
-        const headingWeight = styles.headingWeight || 700;
-        const headingLetterSpacing = styles.headingLetterSpacing || '-0.02em';
-        const bodyLineHeight = styles.bodyLineHeight || 1.7;
-        const paragraphSpacing = styles.paragraphSpacing || '1.25em';
-        const borderRadius = styles.borderRadius || '8px';
-        
         return `
             --content-font-heading: ${theme.fonts.heading};
             --content-font-body: ${theme.fonts.body};
@@ -549,22 +541,11 @@ const WorkSuiteThemes = (function() {
             --content-table-border: ${theme.colors.tableBorder};
             --content-table-header-bg: ${theme.colors.tableHeaderBg};
             
-            --content-heading-weight: ${headingWeight};
-            --content-heading-letter-spacing: ${headingLetterSpacing};
-            --content-body-line-height: ${bodyLineHeight};
-            --content-paragraph-spacing: ${paragraphSpacing};
-            --content-border-radius: ${borderRadius};
-            
-            /* Pointer compatibility - slide variables */
-            --slide-bg: ${theme.colors.background};
-            --slide-text: ${theme.colors.text};
-            --slide-heading: ${theme.colors.heading};
-            --slide-accent: ${theme.colors.accent};
-            --slide-muted: ${theme.colors.muted};
-            --slide-code-bg: ${theme.colors.codeBg};
-            --slide-font-heading: ${theme.fonts.heading};
-            --slide-font-body: ${theme.fonts.body};
-            --slide-font-mono: ${theme.fonts.mono};
+            --content-heading-weight: ${theme.styles.headingWeight};
+            --content-heading-letter-spacing: ${theme.styles.headingLetterSpacing};
+            --content-body-line-height: ${theme.styles.bodyLineHeight};
+            --content-paragraph-spacing: ${theme.styles.paragraphSpacing};
+            --content-border-radius: ${theme.styles.borderRadius};
         `;
     }
 
@@ -661,80 +642,12 @@ const WorkSuiteThemes = (function() {
      * Initialize with saved preference
      */
     function init(container) {
-        loadCustomThemes(); // Load any custom themes from localStorage
         const savedTheme = loadPreference();
         loadFonts(savedTheme);
         if (container) {
             apply(savedTheme, container);
         }
         return savedTheme;
-    }
-
-    // ==================== CUSTOM THEMES ====================
-
-    /**
-     * Load custom themes from localStorage into the registry
-     */
-    function loadCustomThemes() {
-        try {
-            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
-            Object.entries(customThemes).forEach(([id, theme]) => {
-                themes[id] = theme;
-            });
-        } catch (e) {
-            console.warn('Could not load custom themes:', e);
-        }
-    }
-
-    /**
-     * Save a custom theme to localStorage and add to registry
-     */
-    function saveCustomTheme(themeId, themeData) {
-        try {
-            // Add to registry
-            themes[themeId] = themeData;
-            
-            // Save to localStorage
-            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
-            customThemes[themeId] = themeData;
-            localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
-            
-            return true;
-        } catch (e) {
-            console.warn('Could not save custom theme:', e);
-            return false;
-        }
-    }
-
-    /**
-     * Delete a custom theme
-     */
-    function deleteCustomTheme(themeId) {
-        try {
-            // Only delete custom themes (not built-in ones)
-            const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
-            if (customThemes[themeId]) {
-                delete customThemes[themeId];
-                delete themes[themeId];
-                localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
-                return true;
-            }
-            return false;
-        } catch (e) {
-            console.warn('Could not delete custom theme:', e);
-            return false;
-        }
-    }
-
-    /**
-     * Get list of custom theme IDs
-     */
-    function getCustomThemeIds() {
-        try {
-            return Object.keys(JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}'));
-        } catch (e) {
-            return [];
-        }
     }
 
     // ==================== PUBLIC API ====================
@@ -752,12 +665,7 @@ const WorkSuiteThemes = (function() {
         loadFonts,
         savePreference,
         loadPreference,
-        init,
-        // Custom theme management
-        loadCustomThemes,
-        saveCustomTheme,
-        deleteCustomTheme,
-        getCustomThemeIds
+        init
     };
 
 })();

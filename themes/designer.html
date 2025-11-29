@@ -13,9 +13,6 @@
     <!-- Culori for color conversion -->
     <script src="https://cdn.jsdelivr.net/npm/culori@4.0.1/bundled/culori.min.js"></script>
     
-    <!-- Work Suite Themes API -->
-    <script src="content-themes.js"></script>
-    
     <style>
         :root {
             --bg: #0a0a0f;
@@ -48,7 +45,7 @@
         /* Layout */
         .app {
             display: grid;
-            grid-template-columns: 240px 1fr 280px;
+            grid-template-columns: 280px 1fr 320px;
             grid-template-rows: 60px 1fr;
             height: 100vh;
         }
@@ -62,26 +59,6 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-        }
-        
-        .home-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
-            text-decoration: none;
-            font-size: 18px;
-            transition: all 0.2s;
-            margin-right: 12px;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-        }
-        
-        .home-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
         
         .logo {
@@ -217,28 +194,11 @@
         
         /* Main Content */
         main {
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .main-left {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-        }
-        
-        .main-right {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .main-right .theme-preview {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            gap: 24px;
         }
         
         .panel {
@@ -359,12 +319,8 @@
         /* Font Picker */
         .font-section {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        
-        .font-section .font-group:last-child {
-            grid-column: span 2;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
         }
         
         .font-group {
@@ -418,63 +374,31 @@
         }
         
         .theme-preview {
-            border-radius: 16px;
-            padding: 40px;
-            min-height: 100%;
-            background: var(--surface);
-            border: 1px solid var(--border);
-        }
-        
-        .preview-panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 16px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .preview-panel .sidebar-title {
-            margin-bottom: 16px;
+            padding: 24px;
+            min-height: 300px;
         }
         
         .theme-preview h1 {
-            margin-bottom: 12px;
-            font-size: 32px;
+            margin-bottom: 8px;
         }
         
         .theme-preview h2 {
-            margin-bottom: 16px;
-            font-size: 22px;
+            margin-bottom: 12px;
             opacity: 0.9;
         }
         
         .theme-preview p {
             margin-bottom: 16px;
-            font-size: 15px;
-            line-height: 1.7;
-            opacity: 0.85;
+            opacity: 0.8;
         }
         
         .theme-preview code {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 5px;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
-        }
-        
-        .theme-preview pre {
-            padding: 16px;
-            border-radius: 8px;
-            margin: 16px 0;
-            overflow-x: auto;
-        }
-        
-        .theme-preview pre code {
-            padding: 0;
-            background: transparent;
         }
         
         .theme-preview blockquote {
@@ -482,18 +406,6 @@
             padding-left: 16px;
             margin: 16px 0;
             font-style: italic;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .theme-preview ul {
-            margin: 16px 0;
-            padding-left: 24px;
-        }
-        
-        .theme-preview li {
-            margin-bottom: 8px;
-            font-size: 14px;
         }
         
         /* Theme Name Input */
@@ -514,96 +426,36 @@
         
         /* Color Role Mapping */
         .role-mapping {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            display: grid;
+            gap: 8px;
         }
         
         .role-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 8px;
+            gap: 12px;
+            padding: 8px 12px;
             background: var(--bg);
             border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.15s;
-        }
-        
-        .role-item:hover {
-            border-color: var(--border);
-        }
-        
-        .role-item.active {
-            border-color: var(--accent);
-            background: rgba(99, 102, 241, 0.15);
-        }
-        
-        .role-color-wrapper {
-            position: relative;
         }
         
         .role-color {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 4px;
             border: 1px solid rgba(255,255,255,0.2);
         }
         
-        .role-color-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 22px;
-            height: 22px;
-            opacity: 0;
-            cursor: pointer;
-        }
-        
         .role-name {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             flex: 1;
         }
         
         .role-value {
-            font-size: 10px;
+            font-size: 11px;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text-muted);
-        }
-        
-        /* Selection mode hint */
-        .selection-hint {
-            font-size: 10px;
-            color: var(--accent);
-            padding: 6px 8px;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 4px;
-            text-align: center;
-            margin-bottom: 6px;
-            display: none;
-        }
-        
-        .selection-hint.active {
-            display: block;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        
-        /* Clickable color swatches */
-        .color-swatch.picking {
-            cursor: crosshair;
-            animation: glow 1s infinite alternate;
-        }
-        
-        @keyframes glow {
-            from { box-shadow: 0 0 4px var(--accent); }
-            to { box-shadow: 0 0 12px var(--accent); }
         }
         
         /* Export Section */
@@ -721,49 +573,6 @@
             color: white;
         }
         
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-        
-        .pagination-btn {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .pagination-btn:hover:not(:disabled) {
-            border-color: var(--accent);
-            background: var(--surface-hover);
-        }
-        
-        .pagination-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        .pagination-info {
-            font-size: 12px;
-            color: var(--text-muted);
-            min-width: 60px;
-            text-align: center;
-        }
-        
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -787,7 +596,6 @@
 <body>
     <div class="app">
         <header>
-            <a href="../index.html" class="home-btn" title="Back to Work Suite">🧰</a>
             <div class="logo">
                 <span class="logo-icon">🎨</span>
                 <span>Theme Designer</span>
@@ -813,42 +621,41 @@
             <input type="file" id="fileInput" accept="image/*" hidden onchange="handleImageUpload(event)">
             
             <div class="sidebar-title">📸 Sample Images</div>
-            <div class="image-grid" id="imageGrid">
-                <!-- Images rendered by JS -->
+            <div class="category-tabs" id="categoryTabs">
+                <button class="category-tab active" data-category="all">All</button>
+                <button class="category-tab" data-category="nature">Nature</button>
+                <button class="category-tab" data-category="abstract">Abstract</button>
+                <button class="category-tab" data-category="sunset">Sunset</button>
             </div>
-            <div class="pagination" id="pagination">
-                <button class="pagination-btn" onclick="prevPage()" id="prevBtn" disabled>◀</button>
-                <span class="pagination-info" id="pageInfo">1 / 1</span>
-                <button class="pagination-btn" onclick="nextPage()" id="nextBtn">▶</button>
+            <div class="image-grid" id="imageGrid">
+                <div class="loading"><div class="spinner"></div> Loading...</div>
             </div>
         </aside>
         
         <!-- Main Content -->
         <main>
-            <!-- Left Column: Colors, Palettes, Typography -->
-            <div class="main-left">
-                <!-- Extracted Colors -->
-                <div class="panel" id="colorsPanel">
-                    <div class="panel-title">🎯 Extracted Colors</div>
-                    <div id="extractedColors" class="empty-state">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 16v-4M12 8h.01"/>
-                        </svg>
-                        <p>Select an image to extract colors</p>
-                    </div>
+            <!-- Extracted Colors -->
+            <div class="panel" id="colorsPanel">
+                <div class="panel-title">🎯 Extracted Colors</div>
+                <div id="extractedColors" class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <p>Select an image to extract colors</p>
                 </div>
-                
-                <!-- Palette Variations -->
-                <div class="panel" id="variationsPanel" style="display: none;">
-                    <div class="panel-title">✨ Palette Variations</div>
-                    <div class="variations-grid" id="variationsGrid"></div>
-                </div>
-                
-                <!-- Font Selection -->
-                <div class="panel">
-                    <div class="panel-title">🔤 Typography</div>
-                    <div class="font-section">
+            </div>
+            
+            <!-- Palette Variations -->
+            <div class="panel" id="variationsPanel" style="display: none;">
+                <div class="panel-title">✨ Palette Variations</div>
+                <div class="variations-grid" id="variationsGrid"></div>
+            </div>
+            
+            <!-- Font Selection -->
+            <div class="panel">
+                <div class="panel-title">🔤 Typography</div>
+                <div class="font-section">
                     <div class="font-group">
                         <div class="font-group-title">Heading Font</div>
                         <select class="font-select" id="headingFont" onchange="updateFontPreview()">
@@ -901,50 +708,30 @@
                     </div>
                 </div>
             </div>
-            </div>
-            
-            <!-- Right Column: Live Preview -->
-            <div class="main-right">
-                <div class="preview-panel">
-                    <div class="sidebar-title">👁️ Live Preview</div>
-                    <div class="theme-preview" id="themePreview">
-                        <h1>Welcome</h1>
-                        <h2>Subtitle Here</h2>
-                        <p>This is how your content will look with the selected theme colors and typography.</p>
-                        <p>Here's some <code>inline code</code> styling.</p>
-                        <blockquote>A beautiful quote with accent styling.</blockquote>
-                        <ul>
-                            <li>List item one</li>
-                            <li>List item two</li>
-                        </ul>
-                        <pre><code>const theme = "beautiful";</code></pre>
-                    </div>
-                </div>
-            </div>
         </main>
         
-        <!-- Right Sidebar: Config & Export -->
+        <!-- Right Sidebar: Preview & Export -->
         <aside class="preview-sidebar">
             <div class="sidebar-title">📝 Theme Name</div>
             <input type="text" class="theme-name-input" id="themeName" value="Custom Theme" placeholder="Enter theme name...">
             
-            <div class="sidebar-title">🎨 Color Roles</div>
-            <div class="selection-hint" id="selectionHint">
-                👆 Click any color swatch to assign
+            <div class="sidebar-title">👁️ Live Preview</div>
+            <div class="theme-preview" id="themePreview">
+                <h1>Welcome</h1>
+                <h2>Subtitle Here</h2>
+                <p>This is how your content will look with the selected theme colors and typography.</p>
+                <p>Here's some <code>inline code</code> styling.</p>
+                <blockquote>A beautiful quote with accent styling.</blockquote>
             </div>
+            
+            <div class="sidebar-title">🎨 Color Roles</div>
             <div class="role-mapping" id="roleMapping">
-                <div class="empty-state" style="padding: 16px;">
-                    <p style="font-size: 11px;">Colors will appear here</p>
+                <div class="empty-state" style="padding: 20px;">
+                    <p style="font-size: 12px;">Colors will appear here</p>
                 </div>
             </div>
             
-            <div class="sidebar-title">💾 Save Theme</div>
-            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="saveToLibrary()">
-                ✨ Save to Theme Library
-            </button>
-            <div id="saveStatus" style="font-size: 11px; color: var(--success); text-align: center; margin-bottom: 12px; display: none;"></div>
-            
-            <div class="sidebar-title">📦 Export Code</div>
+            <div class="sidebar-title">📦 Export</div>
             <div class="export-section">
                 <div class="export-code" id="exportCode">// Select an image to generate theme code</div>
                 <div style="display: flex; gap: 8px; margin-top: 12px;">
@@ -962,11 +749,6 @@
         let selectedVariation = 'primary';
         let currentPalettes = null;
         let assignedRoles = null;
-        let selectedRoleForPicking = null; // Which role is waiting for a color pick
-        
-        // Pagination state
-        let currentPage = 0;
-        const imagesPerPage = 6;
         
         // Sample images from the images folder
         const sampleImages = [
@@ -1012,210 +794,28 @@
         
         // ==================== INITIALIZATION ====================
         function init() {
-            // Check if running from file:// protocol
-            if (window.location.protocol === 'file:') {
-                showFileProtocolWarning();
-            }
-            
             renderImageGrid();
             setupCategoryTabs();
             loadGoogleFonts();
-            
-            // Check if editing an existing theme
-            const urlParams = new URLSearchParams(window.location.search);
-            const editThemeId = urlParams.get('edit');
-            if (editThemeId) {
-                loadThemeForEditing(editThemeId);
-            }
-        }
-        
-        function loadThemeForEditing(themeId) {
-            // Load custom themes first
-            if (typeof WorkSuiteThemes !== 'undefined' && WorkSuiteThemes.loadCustomThemes) {
-                WorkSuiteThemes.loadCustomThemes();
-            }
-            
-            // Get the theme from localStorage
-            try {
-                const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
-                const theme = customThemes[themeId];
-                
-                if (!theme) {
-                    showToast(`Theme "${themeId}" not found`, 'error');
-                    return;
-                }
-                
-                // Set theme name
-                document.getElementById('themeName').value = theme.name || themeId;
-                
-                // Set fonts
-                if (theme.fonts) {
-                    const headingSelect = document.getElementById('headingFont');
-                    const bodySelect = document.getElementById('bodyFont');
-                    const monoSelect = document.getElementById('monoFont');
-                    
-                    // Find and select matching options
-                    for (let opt of headingSelect.options) {
-                        if (opt.value === theme.fonts.heading) {
-                            headingSelect.value = opt.value;
-                            break;
-                        }
-                    }
-                    for (let opt of bodySelect.options) {
-                        if (opt.value === theme.fonts.body) {
-                            bodySelect.value = opt.value;
-                            break;
-                        }
-                    }
-                    for (let opt of monoSelect.options) {
-                        if (opt.value === theme.fonts.mono) {
-                            monoSelect.value = opt.value;
-                            break;
-                        }
-                    }
-                    updateFontPreview();
-                }
-                
-                // Set color roles from theme colors
-                if (theme.colors) {
-                    assignedRoles = {
-                        background: createColorFromHex(theme.colors.backgroundSolid || theme.colors.background),
-                        text: createColorFromHex(theme.colors.text),
-                        heading: createColorFromHex(theme.colors.heading),
-                        accent: createColorFromHex(theme.colors.accent),
-                        link: createColorFromHex(theme.colors.link),
-                        muted: createColorFromHex(theme.colors.muted),
-                        codeBg: createColorFromHex(theme.colors.codeBg)
-                    };
-                    
-                    // Also populate extracted colors with the theme colors for the palette display
-                    extractedColors = [
-                        assignedRoles.background,
-                        assignedRoles.text,
-                        assignedRoles.heading,
-                        assignedRoles.accent,
-                        assignedRoles.link,
-                        assignedRoles.muted
-                    ].filter(c => c && c.hex);
-                    
-                    renderExtractedColors(extractedColors);
-                    renderRoleMapping();
-                    updateThemePreview();
-                    generateExportCode();
-                    
-                    // Show the variations panel (even though we don't have variations)
-                    document.getElementById('variationsPanel').style.display = 'none';
-                }
-                
-                showToast(`Editing "${theme.name}"`, 'info');
-                
-            } catch (e) {
-                console.error('Failed to load theme for editing:', e);
-                showToast('Failed to load theme', 'error');
-            }
-        }
-        
-        function createColorFromHex(hexOrValue) {
-            if (!hexOrValue) return null;
-            
-            // Handle rgba values or non-hex colors
-            let hex = hexOrValue;
-            if (hexOrValue.startsWith('rgba') || hexOrValue.startsWith('rgb')) {
-                // Try to extract from rgba - just return a placeholder
-                return { hex: '#888888', oklchValues: { l: 0.5, c: 0, h: 0 } };
-            }
-            if (hexOrValue.startsWith('linear-gradient')) {
-                // Extract first color from gradient
-                const match = hexOrValue.match(/#[a-fA-F0-9]{6}/);
-                hex = match ? match[0] : '#888888';
-            }
-            
-            if (!hex.startsWith('#')) {
-                return null;
-            }
-            
-            const r = parseInt(hex.slice(1,3), 16);
-            const g = parseInt(hex.slice(3,5), 16);
-            const b = parseInt(hex.slice(5,7), 16);
-            
-            const rgbColor = { mode: 'rgb', r: r/255, g: g/255, b: b/255 };
-            const oklchColor = rgbToOklch(rgbColor);
-            
-            return {
-                hex: hex,
-                rgb: `rgb(${r}, ${g}, ${b})`,
-                oklch: culori.formatCss(oklchColor),
-                oklchValues: {
-                    l: oklchColor.l || 0,
-                    c: oklchColor.c || 0,
-                    h: oklchColor.h || 0
-                }
-            };
-        }
-        
-        function showFileProtocolWarning() {
-            const warning = document.createElement('div');
-            warning.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: linear-gradient(135deg, #f59e0b, #d97706);
-                color: #000;
-                padding: 12px 24px;
-                text-align: center;
-                z-index: 9999;
-                font-weight: 500;
-            `;
-            warning.innerHTML = `
-                ⚠️ <strong>Local Server Required</strong> - Color extraction won't work with file:// protocol. 
-                Run: <code style="background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px;">python3 -m http.server 8765</code> 
-                then open <a href="http://localhost:8765/themes/designer.html" style="color: #000; text-decoration: underline;">http://localhost:8765/themes/designer.html</a>
-            `;
-            document.body.prepend(warning);
         }
         
         function renderImageGrid() {
             const grid = document.getElementById('imageGrid');
-            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
-            const start = currentPage * imagesPerPage;
-            const end = start + imagesPerPage;
-            const pageImages = sampleImages.slice(start, end);
-            
-            grid.innerHTML = pageImages.map(img => `
+            grid.innerHTML = sampleImages.map(img => `
                 <div class="image-thumb" onclick="selectImage('images/${img}')" data-src="images/${img}">
                     <img src="images/${img}" alt="${img}" loading="lazy">
                 </div>
             `).join('');
-            
-            // Update pagination controls
-            updatePagination();
-        }
-        
-        function updatePagination() {
-            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
-            document.getElementById('pageInfo').textContent = `${currentPage + 1} / ${totalPages}`;
-            document.getElementById('prevBtn').disabled = currentPage === 0;
-            document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
-        }
-        
-        function prevPage() {
-            if (currentPage > 0) {
-                currentPage--;
-                renderImageGrid();
-            }
-        }
-        
-        function nextPage() {
-            const totalPages = Math.ceil(sampleImages.length / imagesPerPage);
-            if (currentPage < totalPages - 1) {
-                currentPage++;
-                renderImageGrid();
-            }
         }
         
         function setupCategoryTabs() {
-            // Category filtering removed for simplicity with pagination
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    // Filter logic would go here
+                });
+            });
         }
         
         // ==================== IMAGE HANDLING ====================
@@ -1260,44 +860,24 @@
         
         // ==================== COLOR EXTRACTION ====================
         async function extractColorsFromImage(src, colorCount) {
-            // Fetch image as blob to avoid CORS/tainted canvas issues
-            try {
-                let blobUrl;
-                
-                if (src.startsWith('data:')) {
-                    // Already a data URL (from file upload)
-                    blobUrl = src;
-                } else {
-                    // Fetch as blob
-                    const response = await fetch(src);
-                    const blob = await response.blob();
-                    blobUrl = URL.createObjectURL(blob);
-                }
-                
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        try {
-                            const colors = getColorsFromImage(img, colorCount);
-                            if (!src.startsWith('data:')) {
-                                URL.revokeObjectURL(blobUrl);
-                            }
-                            resolve(colors);
-                        } catch (e) {
-                            console.error('Color extraction failed:', e);
-                            reject(e);
-                        }
-                    };
-                    img.onerror = (e) => {
-                        console.error('Image load failed:', e);
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                // Don't set crossOrigin for same-origin images
+                img.onload = () => {
+                    try {
+                        const colors = getColorsFromImage(img, colorCount);
+                        resolve(colors);
+                    } catch (e) {
+                        console.error('Color extraction failed:', e);
                         reject(e);
-                    };
-                    img.src = blobUrl;
-                });
-            } catch (e) {
-                console.error('Fetch failed:', e);
-                throw e;
-            }
+                    }
+                };
+                img.onerror = (e) => {
+                    console.error('Image load failed:', e);
+                    reject(e);
+                };
+                img.src = src;
+            });
         }
         
         function getColorsFromImage(img, colorCount) {
@@ -1616,31 +1196,17 @@
                 <div class="palette-section">
                     <div class="palette-label">Click a color to copy its value</div>
                     <div class="palette-colors">
-                        ${colors.map((c, i) => `
-                            <div class="color-swatch ${selectedRoleForPicking ? 'picking' : ''}" 
+                        ${colors.map(c => `
+                            <div class="color-swatch" 
                                  style="background: ${c.hex};" 
                                  data-hex="${c.hex}"
-                                 data-index="${i}"
-                                 onclick="handleSwatchClick(${i})"
+                                 onclick="copyColor('${c.hex}')"
                                  title="${c.hex}">
                             </div>
                         `).join('')}
                     </div>
                 </div>
             `;
-        }
-        
-        function handleSwatchClick(colorIndex) {
-            const palette = currentPalettes ? currentPalettes[selectedVariation].colors : extractedColors;
-            const color = palette[colorIndex];
-            
-            if (selectedRoleForPicking) {
-                // Assign to the selected role
-                assignColorToRole(color);
-            } else {
-                // Copy to clipboard
-                copyColor(color.hex);
-            }
         }
         
         function renderVariations() {
@@ -1681,90 +1247,13 @@
                 { key: 'codeBg', name: 'Code BG' }
             ];
             
-            container.innerHTML = roles.map(role => {
-                const color = assignedRoles[role.key];
-                const hex = color?.hex || '#000000';
-                const isActive = selectedRoleForPicking === role.key;
-                return `
-                <div class="role-item ${isActive ? 'active' : ''}" onclick="selectRoleForPicking('${role.key}')">
-                    <div class="role-color-wrapper">
-                        <div class="role-color" style="background: ${hex}"></div>
-                        <input type="color" class="role-color-input" value="${hex}" 
-                               onchange="updateRoleColor('${role.key}', this.value)" 
-                               onclick="event.stopPropagation()">
-                    </div>
+            container.innerHTML = roles.map(role => `
+                <div class="role-item">
+                    <div class="role-color" style="background: ${assignedRoles[role.key]?.hex || '#000'}"></div>
                     <div class="role-name">${role.name}</div>
-                    <div class="role-value">${hex}</div>
+                    <div class="role-value">${assignedRoles[role.key]?.hex || 'N/A'}</div>
                 </div>
-            `}).join('');
-            
-            // Update selection hint visibility
-            const hint = document.getElementById('selectionHint');
-            if (hint) {
-                hint.classList.toggle('active', selectedRoleForPicking !== null);
-            }
-            
-            // Update swatches to show picking mode
-            updateSwatchPickingMode();
-        }
-        
-        function selectRoleForPicking(roleKey) {
-            if (selectedRoleForPicking === roleKey) {
-                // Deselect if clicking same role
-                selectedRoleForPicking = null;
-            } else {
-                selectedRoleForPicking = roleKey;
-            }
-            renderRoleMapping();
-        }
-        
-        function updateRoleColor(roleKey, hexColor) {
-            if (!assignedRoles) return;
-            
-            // Convert hex to our color object format
-            const r = parseInt(hexColor.slice(1,3), 16);
-            const g = parseInt(hexColor.slice(3,5), 16);
-            const b = parseInt(hexColor.slice(5,7), 16);
-            
-            const rgbColor = { mode: 'rgb', r: r/255, g: g/255, b: b/255 };
-            const oklchColor = rgbToOklch(rgbColor);
-            
-            assignedRoles[roleKey] = {
-                hex: hexColor,
-                rgb: `rgb(${r}, ${g}, ${b})`,
-                oklch: culori.formatCss(oklchColor),
-                oklchValues: {
-                    l: oklchColor.l || 0,
-                    c: oklchColor.c || 0,
-                    h: oklchColor.h || 0
-                }
-            };
-            
-            renderRoleMapping();
-            updateThemePreview();
-            generateExportCode();
-        }
-        
-        function assignColorToRole(colorObj) {
-            if (!selectedRoleForPicking || !assignedRoles) return;
-            
-            assignedRoles[selectedRoleForPicking] = colorObj;
-            selectedRoleForPicking = null;
-            
-            renderRoleMapping();
-            updateThemePreview();
-            generateExportCode();
-        }
-        
-        function updateSwatchPickingMode() {
-            const swatches = document.querySelectorAll('.color-swatch');
-            swatches.forEach(swatch => {
-                if (selectedRoleForPicking) {
-                    swatch.classList.add('picking');
-                } else {
-                    swatch.classList.remove('picking');
-                }
-            });
+            `).join('');
         }
         
         function updateThemePreview() {
@@ -1881,89 +1370,6 @@
         
         function exportTheme() {
             downloadTheme();
-        }
-        
-        function saveToLibrary() {
-            if (!assignedRoles) {
-                showToast('Select an image first to create a theme', 'error');
-                return;
-            }
-            
-            const themeName = document.getElementById('themeName').value || 'Custom Theme';
-            const themeId = themeName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-            
-            const headingFont = document.getElementById('headingFont').value;
-            const bodyFont = document.getElementById('bodyFont').value;
-            const monoFont = document.getElementById('monoFont').value;
-            
-            const bg = assignedRoles.background;
-            const isDark = (bg.oklchValues?.l || 0.5) < 0.5;
-            
-            const themeData = {
-                name: themeName,
-                category: isDark ? 'dark' : 'light',
-                description: 'Custom theme created with Theme Designer',
-                isCustom: true,
-                fonts: {
-                    heading: headingFont,
-                    body: bodyFont,
-                    mono: monoFont
-                },
-                colors: {
-                    background: bg.hex,
-                    backgroundSolid: bg.hex,
-                    text: assignedRoles.text?.hex || '#ffffff',
-                    heading: assignedRoles.heading?.hex || '#ffffff',
-                    accent: assignedRoles.accent?.hex || '#64ffda',
-                    accentAlt: assignedRoles.link?.hex || '#ff6b6b',
-                    muted: assignedRoles.muted?.hex || '#888888',
-                    link: assignedRoles.link?.hex || '#64ffda',
-                    codeBg: assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.1)',
-                    codeText: assignedRoles.text?.hex || '#ffffff',
-                    blockquoteBorder: assignedRoles.accent?.hex || '#64ffda',
-                    blockquoteBg: `rgba(${hexToRgbValues(assignedRoles.accent?.hex || '#64ffda')}, 0.1)`,
-                    tableBorder: assignedRoles.muted?.hex || '#333333',
-                    tableHeaderBg: assignedRoles.codeBg?.hex || 'rgba(255,255,255,0.05)'
-                },
-                styles: {
-                    headingWeight: 600,
-                    headingLetterSpacing: '-0.01em',
-                    bodyLineHeight: 1.7,
-                    paragraphSpacing: '1.25em',
-                    borderRadius: '8px'
-                }
-            };
-            
-            // Check if WorkSuiteThemes is available
-            if (typeof WorkSuiteThemes !== 'undefined' && WorkSuiteThemes.saveCustomTheme) {
-                const success = WorkSuiteThemes.saveCustomTheme(themeId, themeData);
-                if (success) {
-                    showSaveStatus(`✓ "${themeName}" saved to library!`);
-                    showToast('Theme saved! Available in all Work Suite apps.');
-                } else {
-                    showToast('Failed to save theme', 'error');
-                }
-            } else {
-                // Fallback: save directly to localStorage
-                try {
-                    const customThemes = JSON.parse(localStorage.getItem('worksuite-custom-themes') || '{}');
-                    customThemes[themeId] = themeData;
-                    localStorage.setItem('worksuite-custom-themes', JSON.stringify(customThemes));
-                    showSaveStatus(`✓ "${themeName}" saved to library!`);
-                    showToast('Theme saved! Available in all Work Suite apps.');
-                } catch (e) {
-                    showToast('Failed to save theme: ' + e.message, 'error');
-                }
-            }
-        }
-        
-        function showSaveStatus(message) {
-            const status = document.getElementById('saveStatus');
-            status.textContent = message;
-            status.style.display = 'block';
-            setTimeout(() => {
-                status.style.display = 'none';
-            }, 3000);
         }
         
         function copyColor(hex) {

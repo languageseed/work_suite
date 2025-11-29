@@ -814,6 +814,31 @@ app.post('/api/sync-user', auth, async (req, res) => {
 // ===========================================
 // Items (Files/Content) Routes
 // ===========================================
+// Get single item by ID
+app.get('/items/:id', optionalAuth, (req, res) => {
+    try {
+        const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
+        
+        if (!item) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+        
+        // Get tags
+        const tags = db.prepare(`
+            SELECT t.* FROM tags t
+            JOIN item_tags it ON t.id = it.tag_id
+            WHERE it.item_id = ?
+        `).all(item.id);
+        
+        res.json({
+            ...item,
+            tags
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/items', optionalAuth, (req, res) => {
     try {
         const { scope, folder, status, app, tag, workspace_id } = req.query;

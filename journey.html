@@ -1334,6 +1334,14 @@
         function init() {
             loadFromLocalStorage();
             
+            // Check if opened from Tags
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagsId = urlParams.get('tags_id');
+            
+            if (tagsId && loadFromTags(tagsId)) {
+                return;
+            }
+            
             // Add sample data if empty
             if (events.length === 0) {
                 events = [
@@ -1348,6 +1356,52 @@
             
             renderTimeline();
             renderEventsList();
+        }
+        
+        // ==================== TAGS INTEGRATION ====================
+        let currentTagsId = null;
+        
+        function loadFromTags(tagsId) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const file = tagsFiles.find(f => f.id === tagsId);
+                
+                if (file && file.type === 'journey' && file.content) {
+                    const data = JSON.parse(file.content);
+                    
+                    if (data.events) {
+                        events = data.events.map((e, i) => ({
+                            id: i + 1,
+                            date: e.date,
+                            title: e.title,
+                            description: e.description || '',
+                            icon: '📍'
+                        }));
+                    }
+                    
+                    currentTagsId = tagsId;
+                    renderTimeline();
+                    renderEventsList();
+                    showToast(`Opened "${file.name}" from Tags`);
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error loading from Tags:', e);
+            }
+            return false;
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; 
+                background: var(--surface); border: 1px solid var(--border);
+                padding: 12px 20px; border-radius: 8px; color: var(--text);
+                z-index: 1000;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         init();

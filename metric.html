@@ -1510,6 +1510,15 @@
         // ==================== INITIALIZATION ====================
         function init() {
             loadFromLocalStorage();
+            
+            // Check if opened from Tags
+            const urlParams = new URLSearchParams(window.location.search);
+            const tagsId = urlParams.get('tags_id');
+            
+            if (tagsId && loadFromTags(tagsId)) {
+                return;
+            }
+            
             renderSpreadsheet();
             selectCell('A1');
             
@@ -1557,6 +1566,60 @@
                 renderSpreadsheet();
                 selectCell('A1');
             }
+        }
+        
+        // ==================== TAGS INTEGRATION ====================
+        let currentTagsId = null;
+        
+        function loadFromTags(tagsId) {
+            try {
+                const tagsFiles = JSON.parse(localStorage.getItem('tags-files') || '[]');
+                const file = tagsFiles.find(f => f.id === tagsId);
+                
+                if (file && file.type === 'metric' && file.content) {
+                    const tableData = JSON.parse(file.content);
+                    
+                    // Convert table format to spreadsheet format
+                    data = {};
+                    if (tableData.headers && tableData.rows) {
+                        // Add headers
+                        tableData.headers.forEach((header, colIndex) => {
+                            const col = String.fromCharCode(65 + colIndex);
+                            data[`${col}1`] = { value: String(header), formula: '' };
+                        });
+                        
+                        // Add rows
+                        tableData.rows.forEach((row, rowIndex) => {
+                            row.forEach((cell, colIndex) => {
+                                const col = String.fromCharCode(65 + colIndex);
+                                data[`${col}${rowIndex + 2}`] = { value: String(cell), formula: '' };
+                            });
+                        });
+                    }
+                    
+                    currentTagsId = tagsId;
+                    renderSpreadsheet();
+                    selectCell('A1');
+                    showToast(`Opened "${file.name}" from Tags`);
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error loading from Tags:', e);
+            }
+            return false;
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; right: 20px; 
+                background: var(--surface); border: 1px solid var(--border);
+                padding: 12px 20px; border-radius: 8px; color: var(--text);
+                z-index: 1000;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         init();

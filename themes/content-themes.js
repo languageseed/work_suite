@@ -485,6 +485,9 @@ const WorkSuiteThemes = (function() {
      * Get all available themes
      */
     function getThemes() {
+        // Ensure custom themes are loaded
+        loadCustomThemes();
+        
         return Object.entries(themes).map(([id, theme]) => ({
             id,
             ...theme
@@ -502,6 +505,9 @@ const WorkSuiteThemes = (function() {
      * Get a specific theme by ID
      */
     function getTheme(themeId) {
+        // Ensure custom themes are loaded
+        loadCustomThemes();
+        
         return themes[themeId] || null;
     }
 

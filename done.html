@@ -1273,7 +1273,17 @@
                         if (content.columns && Array.isArray(content.columns)) {
                             if (content.columns[0] && typeof content.columns[0] === 'object') {
                                 // New format: columns with embedded cards
-                                columns = content.columns;
+                                // Ensure all cards have required properties
+                                columns = content.columns.map(col => ({
+                                    ...col,
+                                    cards: (col.cards || []).map(card => ({
+                                        id: card.id || 'card_' + Date.now(),
+                                        title: card.title || '',
+                                        description: card.description || '',
+                                        due: card.due || '',
+                                        labels: card.labels || []
+                                    }))
+                                }));
                             } else {
                                 // Legacy format: columns as strings, cards separate
                                 columns = content.columns.map(colName => ({

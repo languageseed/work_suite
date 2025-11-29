@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tags - Work Suite File Manager</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #27272a;
+            --border: #3f3f46;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --text-dim: #71717a;
+            
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            
+            --scope-me: #f472b6;
+            --scope-us: #a78bfa;
+            --scope-we: #38bdf8;
+            --scope-there: #4ade80;
+            
+            --status-backlog: #71717a;
+            --status-progress: #f59e0b;
+            --status-done: #22c55e;
+            --status-closed: #6366f1;
+            
+            --app-pointer: #ec4899;
+            --app-slate: #6366f1;
+            --app-done: #3b82f6;
+            --app-journey: #f59e0b;
+            --app-merman: #06b6d4;
+            --app-metric: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-columns: 240px 1fr 300px;
+            grid-template-rows: 56px 1fr;
+            height: 100vh;
+        }
+        
+        .app.details-hidden {
+            grid-template-columns: 240px 1fr;
+        }
+        
+        .app.details-hidden .details-panel {
+            display: none;
+        }
+        
+        /* Header */
+        header {
+            grid-column: 1 / -1;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 16px;
+        }
+        
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+        
+        .home-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--border);
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+        
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        .nav-item:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .nav-item .icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-item .count {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--text-dim);
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .nav-item.active .count {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .scope-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .scope-dot.me { background: var(--scope-me); }
+        .scope-dot.us { background: var(--scope-us); }
+        .scope-dot.we { background: var(--scope-we); }
+        .scope-dot.there { background: var(--scope-there); }
+        
+        .folder-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .folder-item:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        .folder-item.active {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        .add-folder {
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+        
+        .add-folder:hover {
+            color: var(--accent);
+        }
+        
+        /* Main Content */
+        main {
+            background: var(--bg);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .content-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .content-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .view-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .view-btn.active {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        
+        /* File Grid */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .file-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .file-card.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .file-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .file-icon.pointer { background: rgba(236, 72, 153, 0.2); }
+        .file-icon.slate { background: rgba(99, 102, 241, 0.2); }
+        .file-icon.done { background: rgba(59, 130, 246, 0.2); }
+        .file-icon.journey { background: rgba(245, 158, 11, 0.2); }
+        .file-icon.merman { background: rgba(6, 182, 212, 0.2); }
+        .file-icon.metric { background: rgba(16, 185, 129, 0.2); }
+        
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .file-meta {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        
+        .file-scope {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .file-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .tag {
+            padding: 4px 10px;
+            background: var(--bg);
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .file-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .file-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.backlog { background: var(--status-backlog); }
+        .status-dot.in-progress { background: var(--status-progress); }
+        .status-dot.done { background: var(--status-done); }
+        .status-dot.closed { background: var(--status-closed); }
+        
+        .file-date {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+        
+        /* File List View */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .file-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 120px 100px 100px 80px;
+            gap: 16px;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .file-row:hover {
+            background: var(--surface-hover);
+        }
+        
+        .file-row.selected {
+            background: rgba(99, 102, 241, 0.15);
+        }
+        
+        .file-row .file-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+        }
+        
+        .file-row .file-name {
+            margin-bottom: 0;
+        }
+        
+        /* Details Panel */
+        .details-panel {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .details-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .details-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+        }
+        
+        .close-details {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        .details-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        
+        .details-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .details-type {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        
+        .details-section {
+            margin-bottom: 20px;
+        }
+        
+        .details-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        
+        .details-value {
+            font-size: 14px;
+        }
+        
+        .details-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .details-tags .tag {
+            background: var(--bg);
+        }
+        
+        .add-tag-btn {
+            padding: 4px 10px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+        
+        .add-tag-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .status-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .scope-select {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .scope-option {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .scope-option:hover {
+            border-color: var(--text-dim);
+        }
+        
+        .scope-option.active {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .scope-option .scope-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .scope-option .scope-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .details-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .details-actions .btn {
+            justify-content: center;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+            max-width: 300px;
+        }
+        
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+        
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 8px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <header>
+            <a href="index.html" class="home-btn" title="Back to Work Suite">🧰</a>
+            <div class="logo">
+                <span class="logo-icon">🏷️</span>
+                <span>Tags</span>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search files, tags, folders...">
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="showImportDemo()">
+                    <span>📥</span> Import
+                </button>
+                <button class="btn btn-primary" onclick="createNewFolder()">
+                    <span>➕</span> New Folder
+                </button>
+            </div>
+        </header>
+        
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Scope</div>
+                <div class="nav-item active" data-scope="all" onclick="filterByScope('all')">
+                    <span class="icon">📁</span>
+                    <span>All Files</span>
+                    <span class="count" id="countAll">0</span>
+                </div>
+                <div class="nav-item" data-scope="me" onclick="filterByScope('me')">
+                    <div class="scope-dot me"></div>
+                    <span>Me</span>
+                    <span class="count" id="countMe">0</span>
+                </div>
+                <div class="nav-item" data-scope="us" onclick="filterByScope('us')">
+                    <div class="scope-dot us"></div>
+                    <span>Us</span>
+                    <span class="count" id="countUs">0</span>
+                </div>
+                <div class="nav-item" data-scope="we" onclick="filterByScope('we')">
+                    <div class="scope-dot we"></div>
+                    <span>We</span>
+                    <span class="count" id="countWe">0</span>
+                </div>
+                <div class="nav-item" data-scope="there" onclick="filterByScope('there')">
+                    <div class="scope-dot there"></div>
+                    <span>There</span>
+                    <span class="count" id="countThere">0</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Status</div>
+                <div class="nav-item" data-status="backlog" onclick="filterByStatus('backlog')">
+                    <span class="icon">📋</span>
+                    <span>Backlog</span>
+                </div>
+                <div class="nav-item" data-status="in-progress" onclick="filterByStatus('in-progress')">
+                    <span class="icon">🔄</span>
+                    <span>In Progress</span>
+                </div>
+                <div class="nav-item" data-status="done" onclick="filterByStatus('done')">
+                    <span class="icon">✅</span>
+                    <span>Done</span>
+                </div>
+                <div class="nav-item" data-status="closed" onclick="filterByStatus('closed')">
+                    <span class="icon">📦</span>
+                    <span>Closed</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Folders</div>
+                <div id="folderList"></div>
+                <div class="folder-item add-folder" onclick="createNewFolder()">
+                    <span>➕</span>
+                    <span>Add Folder</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Apps</div>
+                <div class="nav-item" data-type="pointer" onclick="filterByType('pointer')">
+                    <span class="icon">👆</span>
+                    <span>Pointer</span>
+                </div>
+                <div class="nav-item" data-type="slate" onclick="filterByType('slate')">
+                    <span class="icon">📝</span>
+                    <span>Slate</span>
+                </div>
+                <div class="nav-item" data-type="done" onclick="filterByType('done')">
+                    <span class="icon">✅</span>
+                    <span>Done</span>
+                </div>
+                <div class="nav-item" data-type="journey" onclick="filterByType('journey')">
+                    <span class="icon">🛤️</span>
+                    <span>Journey</span>
+                </div>
+                <div class="nav-item" data-type="merman" onclick="filterByType('merman')">
+                    <span class="icon">🐠</span>
+                    <span>Merman</span>
+                </div>
+                <div class="nav-item" data-type="metric" onclick="filterByType('metric')">
+                    <span class="icon">📊</span>
+                    <span>Metric</span>
+                </div>
+            </div>
+        </aside>
+        
+        <main>
+            <div class="content-header">
+                <h1 class="content-title" id="contentTitle">All Files</h1>
+                <div class="view-toggle">
+                    <button class="view-btn active" onclick="setView('grid')">Grid</button>
+                    <button class="view-btn" onclick="setView('list')">List</button>
+                </div>
+            </div>
+            
+            <div id="fileContainer" class="file-grid">
+                <!-- Files rendered here -->
+            </div>
+        </main>
+        
+        <aside class="details-panel" id="detailsPanel">
+            <div class="details-header">
+                <span class="details-title">Details</span>
+                <button class="close-details" onclick="closeDetails()">✕</button>
+            </div>
+            <div id="detailsContent">
+                <div class="empty-state">
+                    <div class="icon">📄</div>
+                    <p>Select a file to view details</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ==================== STATE ====================
+        let files = [];
+        let folders = ['Projects', 'Personal', 'Archive'];
+        let currentFilter = { type: 'all', value: 'all' };
+        let currentView = 'grid';
+        let selectedFile = null;
+        
+        // App type info
+        const appTypes = {
+            pointer: { icon: '👆', name: 'Pointer Presentation', color: 'var(--app-pointer)' },
+            slate: { icon: '📝', name: 'Slate Note', color: 'var(--app-slate)' },
+            done: { icon: '✅', name: 'Done Board', color: 'var(--app-done)' },
+            journey: { icon: '🛤️', name: 'Journey Timeline', color: 'var(--app-journey)' },
+            merman: { icon: '🐠', name: 'Merman Document', color: 'var(--app-merman)' },
+            metric: { icon: '📊', name: 'Metric Sheet', color: 'var(--app-metric)' }
+        };
+        
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadFromLocalStorage();
+            
+            // If no files, load demo data
+            if (files.length === 0) {
+                loadDemoData();
+            }
+            
+            renderFiles();
+            renderFolders();
+            updateCounts();
+            
+            // Setup search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                filterBySearch(e.target.value);
+            });
+        }
+        
+        function loadDemoData() {
+            files = [
+                {
+                    id: 'demo-1',
+                    name: 'Q4 Marketing Plan',
+                    type: 'pointer',
+                    folder: 'Projects',
+                    tags: ['marketing', 'q4', 'presentation'],
+                    status: 'in-progress',
+                    scope: 'we',
+                    createdAt: Date.now() - 86400000 * 3,
+                    updatedAt: Date.now() - 3600000
+                },
+                {
+                    id: 'demo-2',
+                    name: 'Meeting Notes - Nov 28',
+                    type: 'slate',
+                    folder: 'Projects',
+                    tags: ['notes', 'meeting'],
+                    status: 'done',
+                    scope: 'me',
+                    createdAt: Date.now() - 86400000,
+                    updatedAt: Date.now() - 86400000
+                },
+                {
+                    id: 'demo-3',
+                    name: 'Sprint Board',
+                    type: 'done',
+                    folder: 'Projects',
+                    tags: ['agile', 'sprint', 'tasks'],
+                    status: 'in-progress',
+                    scope: 'we',
+                    createdAt: Date.now() - 86400000 * 7,
+                    updatedAt: Date.now() - 1800000
+                },
+                {
+                    id: 'demo-4',
+                    name: 'Product Roadmap 2024',
+                    type: 'journey',
+                    folder: 'Projects',
+                    tags: ['roadmap', 'planning', '2024'],
+                    status: 'backlog',
+                    scope: 'we',
+                    createdAt: Date.now() - 86400000 * 14,
+                    updatedAt: Date.now() - 86400000 * 2
+                },
+                {
+                    id: 'demo-5',
+                    name: 'API Documentation',
+                    type: 'merman',
+                    folder: 'Projects',
+                    tags: ['api', 'docs', 'technical'],
+                    status: 'done',
+                    scope: 'there',
+                    createdAt: Date.now() - 86400000 * 5,
+                    updatedAt: Date.now() - 86400000
+                },
+                {
+                    id: 'demo-6',
+                    name: 'Budget Tracker',
+                    type: 'metric',
+                    folder: 'Personal',
+                    tags: ['budget', 'finance'],
+                    status: 'in-progress',
+                    scope: 'me',
+                    createdAt: Date.now() - 86400000 * 30,
+                    updatedAt: Date.now() - 3600000 * 5
+                },
+                {
+                    id: 'demo-7',
+                    name: 'Team Onboarding',
+                    type: 'pointer',
+                    folder: 'Projects',
+                    tags: ['onboarding', 'hr', 'training'],
+                    status: 'closed',
+                    scope: 'us',
+                    createdAt: Date.now() - 86400000 * 60,
+                    updatedAt: Date.now() - 86400000 * 30
+                },
+                {
+                    id: 'demo-8',
+                    name: 'Ideas & Brainstorm',
+                    type: 'slate',
+                    folder: 'Personal',
+                    tags: ['ideas', 'brainstorm', 'creative'],
+                    status: 'backlog',
+                    scope: 'me',
+                    createdAt: Date.now() - 86400000 * 2,
+                    updatedAt: Date.now() - 86400000
+                }
+            ];
+            saveToLocalStorage();
+        }
+        
+        // ==================== RENDERING ====================
+        function renderFiles() {
+            const container = document.getElementById('fileContainer');
+            const filteredFiles = getFilteredFiles();
+            
+            if (filteredFiles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📂</div>
+                        <h3>No files found</h3>
+                        <p>Files you save from Work Suite apps will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.className = currentView === 'grid' ? 'file-grid' : 'file-list';
+            
+            if (currentView === 'grid') {
+                container.innerHTML = filteredFiles.map(file => renderFileCard(file)).join('');
+            } else {
+                container.innerHTML = filteredFiles.map(file => renderFileRow(file)).join('');
+            }
+        }
+        
+        function renderFileCard(file) {
+            const app = appTypes[file.type];
+            const scopeClass = file.scope;
+            const statusClass = file.status.replace('-', '');
+            
+            return `
+                <div class="file-card ${selectedFile?.id === file.id ? 'selected' : ''}" 
+                     onclick="selectFile('${file.id}')" 
+                     ondblclick="openFile('${file.id}')">
+                    <div class="file-card-header">
+                        <div class="file-icon ${file.type}">${app.icon}</div>
+                        <div class="file-info">
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-meta">${app.name}</div>
+                        </div>
+                        <div class="file-scope scope-dot ${scopeClass}" title="${file.scope}"></div>
+                    </div>
+                    <div class="file-tags">
+                        ${file.tags.slice(0, 3).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        ${file.tags.length > 3 ? `<span class="tag">+${file.tags.length - 3}</span>` : ''}
+                    </div>
+                    <div class="file-footer">
+                        <div class="file-status">
+                            <div class="status-dot ${file.status}"></div>
+                            <span>${formatStatus(file.status)}</span>
+                        </div>
+                        <div class="file-date">${formatDate(file.updatedAt)}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderFileRow(file) {
+            const app = appTypes[file.type];
+            
+            return `
+                <div class="file-row ${selectedFile?.id === file.id ? 'selected' : ''}" 
+                     onclick="selectFile('${file.id}')"
+                     ondblclick="openFile('${file.id}')">
+                    <div class="file-icon ${file.type}">${app.icon}</div>
+                    <div class="file-name">${escapeHtml(file.name)}</div>
+                    <div class="file-tags">
+                        ${file.tags.slice(0, 2).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                    </div>
+                    <div class="file-status">
+                        <div class="status-dot ${file.status}"></div>
+                        <span>${formatStatus(file.status)}</span>
+                    </div>
+                    <div>${file.folder}</div>
+                    <div class="file-date">${formatDate(file.updatedAt)}</div>
+                </div>
+            `;
+        }
+        
+        function renderFolders() {
+            const container = document.getElementById('folderList');
+            container.innerHTML = folders.map(folder => `
+                <div class="folder-item" data-folder="${folder}" onclick="filterByFolder('${folder}')">
+                    <span>📁</span>
+                    <span>${escapeHtml(folder)}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderDetails(file) {
+            const app = appTypes[file.type];
+            const content = document.getElementById('detailsContent');
+            
+            content.innerHTML = `
+                <div class="details-icon ${file.type}">${app.icon}</div>
+                <div class="details-name">${escapeHtml(file.name)}</div>
+                <div class="details-type">${app.name}</div>
+                
+                <div class="details-section">
+                    <div class="details-label">Folder</div>
+                    <div class="details-value">${file.folder}</div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="details-label">Tags</div>
+                    <div class="details-tags">
+                        ${file.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                        <button class="add-tag-btn" onclick="addTagToFile('${file.id}')">+ Add</button>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="details-label">Status</div>
+                    <select class="status-select" onchange="updateFileStatus('${file.id}', this.value)">
+                        <option value="backlog" ${file.status === 'backlog' ? 'selected' : ''}>📋 Backlog</option>
+                        <option value="in-progress" ${file.status === 'in-progress' ? 'selected' : ''}>🔄 In Progress</option>
+                        <option value="done" ${file.status === 'done' ? 'selected' : ''}>✅ Done</option>
+                        <option value="closed" ${file.status === 'closed' ? 'selected' : ''}>📦 Closed</option>
+                    </select>
+                </div>
+                
+                <div class="details-section">
+                    <div class="details-label">Scope</div>
+                    <div class="scope-select">
+                        <div class="scope-option ${file.scope === 'me' ? 'active' : ''}" onclick="updateFileScope('${file.id}', 'me')">
+                            <div class="scope-icon">👤</div>
+                            <div class="scope-label">Me</div>
+                        </div>
+                        <div class="scope-option ${file.scope === 'us' ? 'active' : ''}" onclick="updateFileScope('${file.id}', 'us')">
+                            <div class="scope-icon">👥</div>
+                            <div class="scope-label">Us</div>
+                        </div>
+                        <div class="scope-option ${file.scope === 'we' ? 'active' : ''}" onclick="updateFileScope('${file.id}', 'we')">
+                            <div class="scope-icon">🏢</div>
+                            <div class="scope-label">We</div>
+                        </div>
+                        <div class="scope-option ${file.scope === 'there' ? 'active' : ''}" onclick="updateFileScope('${file.id}', 'there')">
+                            <div class="scope-icon">🌐</div>
+                            <div class="scope-label">There</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="details-label">Created</div>
+                    <div class="details-value">${new Date(file.createdAt).toLocaleDateString()}</div>
+                </div>
+                
+                <div class="details-section">
+                    <div class="details-label">Modified</div>
+                    <div class="details-value">${new Date(file.updatedAt).toLocaleString()}</div>
+                </div>
+                
+                <div class="details-actions">
+                    <button class="btn btn-primary" onclick="openFile('${file.id}')">
+                        <span>📂</span> Open in ${app.name.split(' ')[0]}
+                    </button>
+                    <button class="btn" onclick="deleteFile('${file.id}')">
+                        <span>🗑️</span> Delete
+                    </button>
+                </div>
+            `;
+        }
+        
+        // ==================== FILTERING ====================
+        function getFilteredFiles() {
+            let result = [...files];
+            
+            switch (currentFilter.type) {
+                case 'scope':
+                    if (currentFilter.value !== 'all') {
+                        result = result.filter(f => f.scope === currentFilter.value);
+                    }
+                    break;
+                case 'status':
+                    result = result.filter(f => f.status === currentFilter.value);
+                    break;
+                case 'folder':
+                    result = result.filter(f => f.folder === currentFilter.value);
+                    break;
+                case 'type':
+                    result = result.filter(f => f.type === currentFilter.value);
+                    break;
+                case 'search':
+                    const query = currentFilter.value.toLowerCase();
+                    result = result.filter(f => 
+                        f.name.toLowerCase().includes(query) ||
+                        f.tags.some(t => t.toLowerCase().includes(query)) ||
+                        f.folder.toLowerCase().includes(query)
+                    );
+                    break;
+            }
+            
+            // Sort by updated date
+            result.sort((a, b) => b.updatedAt - a.updatedAt);
+            
+            return result;
+        }
+        
+        function filterByScope(scope) {
+            currentFilter = { type: 'scope', value: scope };
+            document.getElementById('contentTitle').textContent = 
+                scope === 'all' ? 'All Files' : `${scope.charAt(0).toUpperCase() + scope.slice(1)} Files`;
+            updateActiveNav('scope', scope);
+            renderFiles();
+        }
+        
+        function filterByStatus(status) {
+            currentFilter = { type: 'status', value: status };
+            document.getElementById('contentTitle').textContent = formatStatus(status);
+            updateActiveNav('status', status);
+            renderFiles();
+        }
+        
+        function filterByFolder(folder) {
+            currentFilter = { type: 'folder', value: folder };
+            document.getElementById('contentTitle').textContent = folder;
+            updateActiveNav('folder', folder);
+            renderFiles();
+        }
+        
+        function filterByType(type) {
+            currentFilter = { type: 'type', value: type };
+            document.getElementById('contentTitle').textContent = appTypes[type].name + 's';
+            updateActiveNav('type', type);
+            renderFiles();
+        }
+        
+        function filterBySearch(query) {
+            if (query.trim()) {
+                currentFilter = { type: 'search', value: query };
+                document.getElementById('contentTitle').textContent = `Search: "${query}"`;
+            } else {
+                currentFilter = { type: 'scope', value: 'all' };
+                document.getElementById('contentTitle').textContent = 'All Files';
+            }
+            renderFiles();
+        }
+        
+        function updateActiveNav(type, value) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (type === 'scope' && item.dataset.scope === value) {
+                    item.classList.add('active');
+                } else if (type === 'status' && item.dataset.status === value) {
+                    item.classList.add('active');
+                } else if (type === 'type' && item.dataset.type === value) {
+                    item.classList.add('active');
+                }
+            });
+            
+            document.querySelectorAll('.folder-item').forEach(item => {
+                item.classList.toggle('active', type === 'folder' && item.dataset.folder === value);
+            });
+        }
+        
+        // ==================== FILE OPERATIONS ====================
+        function selectFile(id) {
+            selectedFile = files.find(f => f.id === id);
+            renderFiles();
+            if (selectedFile) {
+                renderDetails(selectedFile);
+            }
+        }
+        
+        function openFile(id) {
+            const file = files.find(f => f.id === id);
+            if (!file) return;
+            
+            // For now, just show a toast - later this will open the actual app
+            showToast(`Opening ${file.name} in ${appTypes[file.type].name}...`);
+            
+            // In future: window.open(`${file.type}.html?id=${file.id}`, '_blank');
+        }
+        
+        function updateFileStatus(id, status) {
+            const file = files.find(f => f.id === id);
+            if (file) {
+                file.status = status;
+                file.updatedAt = Date.now();
+                saveToLocalStorage();
+                renderFiles();
+                showToast(`Status updated to ${formatStatus(status)}`);
+            }
+        }
+        
+        function updateFileScope(id, scope) {
+            const file = files.find(f => f.id === id);
+            if (file) {
+                file.scope = scope;
+                file.updatedAt = Date.now();
+                saveToLocalStorage();
+                renderDetails(file);
+                renderFiles();
+                updateCounts();
+                showToast(`Moved to ${scope}`);
+            }
+        }
+        
+        function addTagToFile(id) {
+            const tag = prompt('Enter a new tag:');
+            if (tag && tag.trim()) {
+                const file = files.find(f => f.id === id);
+                if (file && !file.tags.includes(tag.trim())) {
+                    file.tags.push(tag.trim().toLowerCase());
+                    file.updatedAt = Date.now();
+                    saveToLocalStorage();
+                    renderDetails(file);
+                    renderFiles();
+                }
+            }
+        }
+        
+        function deleteFile(id) {
+            if (!confirm('Delete this file?')) return;
+            
+            files = files.filter(f => f.id !== id);
+            selectedFile = null;
+            saveToLocalStorage();
+            renderFiles();
+            updateCounts();
+            closeDetails();
+            showToast('File deleted');
+        }
+        
+        function createNewFolder() {
+            const name = prompt('Enter folder name:');
+            if (name && name.trim() && !folders.includes(name.trim())) {
+                folders.push(name.trim());
+                saveToLocalStorage();
+                renderFolders();
+                showToast(`Folder "${name}" created`);
+            }
+        }
+        
+        // ==================== VIEW ====================
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === view);
+            });
+            renderFiles();
+        }
+        
+        function closeDetails() {
+            selectedFile = null;
+            document.getElementById('detailsContent').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📄</div>
+                    <p>Select a file to view details</p>
+                </div>
+            `;
+            renderFiles();
+        }
+        
+        // ==================== DEMO ====================
+        function showImportDemo() {
+            showToast('Import feature coming soon! Files will be importable from Work Suite apps.');
+        }
+        
+        // ==================== COUNTS ====================
+        function updateCounts() {
+            document.getElementById('countAll').textContent = files.length;
+            document.getElementById('countMe').textContent = files.filter(f => f.scope === 'me').length;
+            document.getElementById('countUs').textContent = files.filter(f => f.scope === 'us').length;
+            document.getElementById('countWe').textContent = files.filter(f => f.scope === 'we').length;
+            document.getElementById('countThere').textContent = files.filter(f => f.scope === 'there').length;
+        }
+        
+        // ==================== STORAGE ====================
+        function saveToLocalStorage() {
+            localStorage.setItem('tags-files', JSON.stringify(files));
+            localStorage.setItem('tags-folders', JSON.stringify(folders));
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const savedFiles = localStorage.getItem('tags-files');
+                const savedFolders = localStorage.getItem('tags-folders');
+                
+                if (savedFiles) files = JSON.parse(savedFiles);
+                if (savedFolders) folders = JSON.parse(savedFolders);
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+            }
+        }
+        
+        // ==================== UTILITIES ====================
+        function formatStatus(status) {
+            return status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+        
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
+
